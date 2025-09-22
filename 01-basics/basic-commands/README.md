@@ -292,6 +292,23 @@ nslookup 8.8.8.8
 nslookup
 ```
 
+**Understanding nslookup Output**:
+```
+Server:		8.8.8.8
+Address:	8.8.8.8#53
+
+Non-authoritative answer:
+Name:	google.com
+Address: 142.250.191.14
+```
+
+**What each part means**:
+- **Server**: DNS server used for the query
+- **Address**: Server IP and port (#53 = DNS port)
+- **Non-authoritative**: Answer came from cache, not the authoritative server
+- **Name**: Domain name that was queried
+- **Address**: IP address returned by DNS
+
 ### dig
 **Purpose**: Advanced DNS lookup tool with more detailed output
 
@@ -324,6 +341,71 @@ dig +trace google.com
 # Reverse DNS lookup
 dig -x 8.8.8.8
 ```
+
+**Understanding dig Output**:
+```
+; <<>> DiG 9.16.1-Ubuntu <<>> google.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 12345
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; QUESTION SECTION:
+;google.com.			IN	A
+
+;; ANSWER SECTION:
+google.com.		300	IN	A	142.250.191.14
+
+;; Query time: 15 msec
+;; SERVER: 8.8.8.8#53(8.8.8.8)
+;; WHEN: Mon Jan 01 12:00:00 UTC 2024
+;; MSG SIZE  rcvd: 55
+```
+
+**What each section means**:
+- **HEADER**: Query details (opcode, status, flags)
+- **QUESTION**: What you asked for (domain and record type)
+- **ANSWER**: The actual DNS record returned
+- **AUTHORITY**: Authoritative servers (if any)
+- **ADDITIONAL**: Additional records (if any)
+- **Query time**: How long the query took
+- **SERVER**: Which DNS server was used
+- **WHEN**: Timestamp of the query
+
+### DNS Record Types
+**Common DNS record types you'll encounter**:
+
+```bash
+# A Record (IPv4 address)
+dig google.com A
+
+# AAAA Record (IPv6 address)  
+dig google.com AAAA
+
+# MX Record (Mail server)
+dig google.com MX
+
+# NS Record (Name servers)
+dig google.com NS
+
+# TXT Record (Text records)
+dig google.com TXT
+
+# CNAME Record (Alias)
+dig www.google.com CNAME
+
+# PTR Record (Reverse DNS)
+dig -x 8.8.8.8
+```
+
+**What each record type means**:
+- **A**: Maps domain to IPv4 address
+- **AAAA**: Maps domain to IPv6 address
+- **MX**: Specifies mail servers for the domain
+- **NS**: Lists authoritative DNS servers
+- **TXT**: Stores text information (SPF, DKIM, etc.)
+- **CNAME**: Creates alias for another domain
+- **PTR**: Maps IP address back to domain name
 
 ## ARP Commands
 
