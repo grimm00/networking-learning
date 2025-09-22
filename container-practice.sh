@@ -97,6 +97,17 @@ show_scenarios() {
     echo "6. Packet Analysis"
     echo "   - tcpdump, wireshark, packet capture"
     echo "   - Container: net-practice"
+    
+    echo ""
+    echo "7. DNS Analysis"
+    echo "   - dns-analyzer.py, dns-troubleshoot.sh"
+    echo "   - Container: net-practice"
+    
+    echo ""
+    echo "8. All Project Scripts"
+    echo "   - Python tools: /scripts/*.py"
+    echo "   - Shell scripts: /scripts/*.sh"
+    echo "   - Container: net-practice"
 }
 
 # Function to enter practice container
@@ -181,6 +192,40 @@ run_command() {
     docker exec $container bash -c "$command"
 }
 
+# Function to run DNS analysis tools
+run_dns_analysis() {
+    local container=${1:-net-practice}
+    local domain=${2:-"google.com"}
+    
+    print_header "Running DNS Analysis for $domain"
+    
+    echo "🔍 DNS Analyzer (Python):"
+    docker exec $container python3 /tools/dns-analyzer.py $domain
+    
+    echo ""
+    echo "🛠️ DNS Troubleshoot (Shell):"
+    docker exec $container /tools/dns-troubleshoot.sh -a $domain
+}
+
+# Function to list all available scripts
+list_scripts() {
+    local container=${1:-net-practice}
+    
+    print_header "Available Scripts in Container"
+    
+    echo "🐍 Python Scripts:"
+    docker exec $container find /scripts -name "*.py" -exec basename {} \; | sort
+    
+    echo ""
+    echo "🐚 Shell Scripts:"
+    docker exec $container find /scripts -name "*.sh" -exec basename {} \; | sort
+    
+    echo ""
+    echo "📁 Scripts are located in: /scripts/"
+    echo "💡 Use: docker exec $container python3 /scripts/script-name.py"
+    echo "💡 Use: docker exec $container /scripts/script-name.sh"
+}
+
 # Main menu
 show_menu() {
     print_header "Containerized Networking Practice"
@@ -190,10 +235,12 @@ show_menu() {
     echo "4. Run Practice Exercises"
     echo "5. Show Network Information"
     echo "6. Run Specific Command"
-    echo "7. Show Available Scenarios"
-    echo "8. Exit"
+    echo "7. Run DNS Analysis"
+    echo "8. List All Scripts"
+    echo "9. Show Available Scenarios"
+    echo "10. Exit"
     echo ""
-    read -p "Choose an option (1-8): " choice
+    read -p "Choose an option (1-10): " choice
     
     case $choice in
         1)
@@ -232,14 +279,21 @@ show_menu() {
             run_command ${container:-net-practice} "${command:-ip addr show}"
             ;;
         7)
-            show_scenarios
+            read -p "Enter domain to analyze (default: google.com): " domain
+            run_dns_analysis net-practice ${domain:-google.com}
             ;;
         8)
+            list_scripts net-practice
+            ;;
+        9)
+            show_scenarios
+            ;;
+        10)
             print_success "Goodbye!"
             exit 0
             ;;
         *)
-            print_error "Invalid option. Please choose 1-8."
+            print_error "Invalid option. Please choose 1-10."
             ;;
     esac
 }
@@ -269,15 +323,19 @@ if [ $# -gt 0 ]; then
         scenarios)
             show_scenarios
             ;;
+        list-scripts)
+            list_scripts net-practice
+            ;;
         *)
-            echo "Usage: $0 {start|stop|enter|exercises|info|run|scenarios}"
-            echo "  start      - Start the networking environment"
-            echo "  stop       - Stop the networking environment"
-            echo "  enter      - Enter practice container"
-            echo "  exercises  - Run practice exercises"
-            echo "  info       - Show network information"
-            echo "  run        - Run specific command"
-            echo "  scenarios  - Show available scenarios"
+            echo "Usage: $0 {start|stop|enter|exercises|info|run|scenarios|list-scripts}"
+            echo "  start         - Start the networking environment"
+            echo "  stop          - Stop the networking environment"
+            echo "  enter         - Enter practice container"
+            echo "  exercises     - Run practice exercises"
+            echo "  info          - Show network information"
+            echo "  run           - Run specific command"
+            echo "  scenarios     - Show available scenarios"
+            echo "  list-scripts  - List all available scripts"
             exit 1
             ;;
     esac

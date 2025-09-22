@@ -92,12 +92,13 @@ services:
     command: |
       bash -c "
         apt-get update &&
-        apt-get install -y iproute2 net-tools traceroute iputils-ping tcpdump curl wget dnsutils nmap iptables net-tools &&
+        apt-get install -y iproute2 net-tools traceroute iputils-ping tcpdump curl wget dnsutils nmap iptables net-tools python3 python3-pip &&
         tail -f /dev/null
       "
     volumes:
       - ./01-basics/basic-commands:/commands
       - ./tools:/tools
+      - ./scripts:/scripts
     cap_add:
       - NET_ADMIN
       - NET_RAW
