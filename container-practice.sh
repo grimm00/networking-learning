@@ -104,7 +104,12 @@ show_scenarios() {
     echo "   - Container: net-practice"
     
     echo ""
-    echo "8. All Project Scripts"
+    echo "8. SSH Analysis"
+    echo "   - ssh-analyzer.py, ssh-troubleshoot.sh"
+    echo "   - Container: net-practice"
+    
+    echo ""
+    echo "9. All Project Scripts"
     echo "   - Python tools: /scripts/*.py"
     echo "   - Shell scripts: /scripts/*.sh"
     echo "   - Container: net-practice"
@@ -200,11 +205,36 @@ run_dns_analysis() {
     print_header "Running DNS Analysis for $domain"
     
     echo "🔍 DNS Analyzer (Python):"
-    docker exec $container python3 /tools/dns-analyzer.py $domain
+    docker exec $container python3 /scripts/dns-analyzer.py $domain
     
     echo ""
     echo "🛠️ DNS Troubleshoot (Shell):"
-    docker exec $container /tools/dns-troubleshoot.sh -a $domain
+    docker exec $container /scripts/dns-troubleshoot.sh -a $domain
+}
+
+# Function to run SSH analysis tools
+run_ssh_analysis() {
+    local container=${1:-net-practice}
+    local host=${2:-"localhost"}
+    local port=${3:-"22"}
+    local username=${4:-""}
+    
+    print_header "Running SSH Analysis for $host:$port"
+    
+    echo "🔍 SSH Analyzer (Python):"
+    if [ -n "$username" ]; then
+        docker exec $container python3 /scripts/ssh-analyzer.py -u "$username" "$host" -p "$port"
+    else
+        docker exec $container python3 /scripts/ssh-analyzer.py "$host" -p "$port"
+    fi
+    
+    echo ""
+    echo "🛠️ SSH Troubleshoot (Shell):"
+    if [ -n "$username" ]; then
+        docker exec $container /scripts/ssh-troubleshoot.sh -u "$username" "$host" -p "$port"
+    else
+        docker exec $container /scripts/ssh-troubleshoot.sh "$host" -p "$port"
+    fi
 }
 
 # Function to list all available scripts
@@ -236,11 +266,12 @@ show_menu() {
     echo "5. Show Network Information"
     echo "6. Run Specific Command"
     echo "7. Run DNS Analysis"
-    echo "8. List All Scripts"
-    echo "9. Show Available Scenarios"
-    echo "10. Exit"
+    echo "8. Run SSH Analysis"
+    echo "9. List All Scripts"
+    echo "10. Show Available Scenarios"
+    echo "11. Exit"
     echo ""
-    read -p "Choose an option (1-10): " choice
+    read -p "Choose an option (1-11): " choice
     
     case $choice in
         1)
@@ -283,12 +314,18 @@ show_menu() {
             run_dns_analysis net-practice ${domain:-google.com}
             ;;
         8)
-            list_scripts net-practice
+            read -p "Enter host to analyze (default: localhost): " host
+            read -p "Enter SSH port (default: 22): " port
+            read -p "Enter username (optional): " username
+            run_ssh_analysis net-practice ${host:-localhost} ${port:-22} "$username"
             ;;
         9)
-            show_scenarios
+            list_scripts net-practice
             ;;
         10)
+            show_scenarios
+            ;;
+        11)
             print_success "Goodbye!"
             exit 0
             ;;
@@ -320,6 +357,16 @@ if [ $# -gt 0 ]; then
         run)
             run_command ${2:-net-practice} "${3:-ip addr show}"
             ;;
+        dns)
+            read -p "Enter domain to analyze (default: google.com): " domain
+            run_dns_analysis net-practice ${domain:-google.com}
+            ;;
+        ssh)
+            read -p "Enter host to analyze (default: localhost): " host
+            read -p "Enter SSH port (default: 22): " port
+            read -p "Enter username (optional): " username
+            run_ssh_analysis net-practice ${host:-localhost} ${port:-22} "$username"
+            ;;
         scenarios)
             show_scenarios
             ;;
@@ -327,13 +374,15 @@ if [ $# -gt 0 ]; then
             list_scripts net-practice
             ;;
         *)
-            echo "Usage: $0 {start|stop|enter|exercises|info|run|scenarios|list-scripts}"
+            echo "Usage: $0 {start|stop|enter|exercises|info|run|dns|ssh|scenarios|list-scripts}"
             echo "  start         - Start the networking environment"
             echo "  stop          - Stop the networking environment"
             echo "  enter         - Enter practice container"
             echo "  exercises     - Run practice exercises"
             echo "  info          - Show network information"
             echo "  run           - Run specific command"
+            echo "  dns           - Run DNS analysis"
+            echo "  ssh           - Run SSH analysis"
             echo "  scenarios     - Show available scenarios"
             echo "  list-scripts  - List all available scripts"
             exit 1
