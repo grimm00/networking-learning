@@ -58,6 +58,8 @@ round-trip min/avg/max/stddev = 9.012/10.678/12.345/1.234 ms
 ### traceroute
 **Purpose**: Trace the path packets take to reach a destination
 
+**Note**: Command options vary between operating systems. Examples shown are for macOS/Linux.
+
 **Basic Syntax**:
 ```bash
 traceroute [options] destination
@@ -65,11 +67,11 @@ traceroute [options] destination
 
 **Common Options**:
 - `-n`: Don't resolve hostnames (numeric output)
-- `-T`: Use TCP instead of UDP
-- `-U`: Use UDP instead of ICMP
-- `-I`: Use ICMP instead of UDP
+- `-I`: Use ICMP instead of UDP (macOS)
+- `-P protocol`: Use specified protocol (UDP, TCP, ICMP, GRE)
 - `-m max_ttl`: Set maximum TTL
 - `-w timeout`: Set timeout for each probe
+- `-q queries`: Set number of probes per TTL
 
 **Examples**:
 ```bash
@@ -79,11 +81,14 @@ traceroute google.com
 # Numeric output only
 traceroute -n 8.8.8.8
 
-# TCP traceroute
-traceroute -T google.com
-
-# ICMP traceroute
+# ICMP traceroute (macOS)
 traceroute -I google.com
+
+# TCP traceroute (if supported)
+traceroute -P tcp google.com
+
+# UDP traceroute (default)
+traceroute -P udp google.com
 ```
 
 **Output Interpretation**:
