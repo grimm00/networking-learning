@@ -102,10 +102,10 @@ traceroute to google.com (142.250.191.14), 64 hops max, 52 byte packets
 
 ## Network Configuration Commands
 
-### ip
+### ip (Linux - Primary)
 **Purpose**: Modern network configuration and information tool
 
-**Note**: Not available on macOS by default. Install with: `brew install iproute2mac`
+**Note**: This is the primary tool in Linux containers. macOS equivalent: `ifconfig` + `route`
 
 **Basic Syntax**:
 ```bash
@@ -120,29 +120,29 @@ ip [object] [command] [options]
 
 **Examples**:
 ```bash
-# Show all IP addresses
+# Show all IP addresses (Linux)
 ip addr show
 
-# Show routing table
+# Show routing table (Linux)
 ip route show
 
-# Show network interfaces
+# Show network interfaces (Linux)
 ip link show
 
-# Show ARP table
+# Show ARP table (Linux)
 ip neigh show
 
-# Add IP address
+# Add IP address (Linux)
 sudo ip addr add 192.168.1.100/24 dev eth0
 
-# Add route
+# Add route (Linux)
 sudo ip route add 192.168.2.0/24 via 192.168.1.1
 
-# Delete route
+# Delete route (Linux)
 sudo ip route del 192.168.2.0/24
 ```
 
-### ifconfig
+### ifconfig (macOS - Legacy)
 **Purpose**: Legacy network interface configuration (deprecated but still used)
 
 **Note**: Default network configuration tool on macOS. Use `ip` command on Linux for modern functionality.
@@ -154,21 +154,21 @@ ifconfig [interface] [options]
 
 **Examples**:
 ```bash
-# Show all interfaces
+# Show all interfaces (macOS)
 ifconfig
 
-# Show specific interface
-ifconfig eth0
+# Show specific interface (macOS)
+ifconfig en0
 
-# Configure IP address
-sudo ifconfig eth0 192.168.1.100 netmask 255.255.255.0
+# Configure IP address (macOS)
+sudo ifconfig en0 192.168.1.100 netmask 255.255.255.0
 
-# Bring interface up/down
-sudo ifconfig eth0 up
-sudo ifconfig eth0 down
+# Bring interface up/down (macOS)
+sudo ifconfig en0 up
+sudo ifconfig en0 down
 ```
 
-### route
+### route (macOS - Legacy)
 **Purpose**: Legacy routing table management (deprecated but still used)
 
 **Note**: Available on both macOS and Linux. Modern alternative is `ip route` on Linux.
@@ -180,23 +180,58 @@ route [options] [command] [destination] [gateway]
 
 **Examples**:
 ```bash
-# Show routing table
+# Show routing table (macOS)
 route -n
 
-# Add default route
+# Add default route (macOS)
 sudo route add default gw 192.168.1.1
 
-# Add specific route
+# Add specific route (macOS)
 sudo route add -net 192.168.2.0 netmask 255.255.255.0 gw 192.168.1.1
 
-# Delete route
+# Delete route (macOS)
 sudo route del -net 192.168.2.0 netmask 255.255.255.0
 ```
 
 ## Network Statistics Commands
 
-### netstat
+### ss (Linux - Primary)
+**Purpose**: Modern replacement for netstat - faster and more features
+
+**Note**: This is the primary tool in Linux containers. macOS equivalent: `netstat`
+
+**Basic Syntax**:
+```bash
+ss [options]
+```
+
+**Common Options**:
+- `-t`: Show TCP connections
+- `-u`: Show UDP connections
+- `-l`: Show listening ports
+- `-n`: Show numeric addresses
+- `-p`: Show process information
+- `-a`: Show all connections
+
+**Examples**:
+```bash
+# Show all listening ports (Linux)
+ss -tuln
+
+# Show TCP connections (Linux)
+ss -t
+
+# Show UDP connections (Linux)
+ss -u
+
+# Show with process info (Linux)
+ss -tulnp
+```
+
+### netstat (macOS - Legacy)
 **Purpose**: Display network connections, routing tables, and interface statistics
+
+**Note**: Available on both macOS and Linux. Modern alternative is `ss` on Linux.
 
 **Basic Syntax**:
 ```bash
@@ -215,24 +250,26 @@ netstat [options]
 
 **Examples**:
 ```bash
-# Show all connections
+# Show all connections (macOS)
 netstat -tuln
 
-# Show listening ports
+# Show listening ports (macOS)
 netstat -tuln | grep LISTEN
 
-# Show routing table
+# Show routing table (macOS)
 netstat -rn
 
-# Show interface statistics
+# Show interface statistics (macOS)
 netstat -i
 
-# Show protocol statistics
+# Show protocol statistics (macOS)
 netstat -s
 ```
 
-### ss
+### ss (Linux - Primary)
 **Purpose**: Modern replacement for netstat (faster and more features)
+
+**Note**: This is the primary tool in Linux containers. macOS equivalent: `netstat`
 
 **Basic Syntax**:
 ```bash
@@ -251,19 +288,19 @@ ss [options]
 
 **Examples**:
 ```bash
-# Show all connections
+# Show all connections (Linux)
 ss -tuln
 
-# Show listening ports
+# Show listening ports (Linux)
 ss -tuln | grep LISTEN
 
-# Show TCP connections
+# Show TCP connections (Linux)
 ss -t
 
-# Show UDP connections
+# Show UDP connections (Linux)
 ss -u
 
-# Show summary
+# Show summary (Linux)
 ss -s
 ```
 
@@ -555,9 +592,61 @@ ip neigh show
 - `-t`: TCP only
 - `-u`: UDP only
 
-## macOS-Specific Notes
+## Linux vs macOS Command Reference
 
-### Installing Modern Tools
+### Primary Learning Environment
+**This guide focuses on Linux commands** (used in containers) with macOS equivalents shown for reference.
+
+### Command Equivalents Table
+| Function | Linux (Primary) | macOS (Reference) | Notes |
+|----------|-----------------|-------------------|-------|
+| **Interface config** | `ip addr show` | `ifconfig -a` | Linux: Modern, detailed |
+| **Route management** | `ip route show` | `route -n` | Linux: More flexible |
+| **ARP table** | `ip neigh show` | `arp -a` | Both work similarly |
+| **Network stats** | `ss -tuln` | `netstat -tuln` | Linux: Faster, more features |
+| **Packet capture** | `tcpdump` | `tcpdump` | Same command |
+| **Ping** | `ping` | `ping` | Same command |
+| **Traceroute** | `traceroute` | `traceroute` | Same command |
+| **DNS lookup** | `nslookup` | `nslookup` | Same command |
+| **Interface up/down** | `ip link set dev eth0 up` | `ifconfig eth0 up` | Linux: More precise |
+
+### Linux-First Examples
+```bash
+# Show all interfaces (Linux)
+ip addr show
+
+# Show routing table (Linux)
+ip route show
+
+# Show ARP table (Linux)
+ip neigh show
+
+# Show listening ports (Linux)
+ss -tuln
+
+# Bring interface up (Linux)
+sudo ip link set dev eth0 up
+```
+
+### macOS Equivalents
+```bash
+# Show all interfaces (macOS)
+ifconfig -a
+
+# Show routing table (macOS)
+netstat -rn
+
+# Show ARP table (macOS)
+arp -a
+
+# Show listening ports (macOS)
+netstat -tuln
+
+# Bring interface up (macOS)
+sudo ifconfig eth0 up
+```
+
+### Installing Linux Tools on macOS
 ```bash
 # Install ip command (Linux equivalent)
 brew install iproute2mac
@@ -568,29 +657,8 @@ brew install tcpdump
 brew install wireshark
 ```
 
-### macOS vs Linux Command Equivalents
-| Function | macOS | Linux |
-|----------|-------|-------|
-| Interface config | `ifconfig` | `ip addr` |
-| Route management | `route` | `ip route` |
-| ARP table | `arp -a` | `ip neigh` |
-| Network stats | `netstat` | `ss` |
-| Packet capture | `tcpdump` | `tcpdump` |
-
-### macOS-Specific Commands
-```bash
-# Show all network interfaces
-ifconfig -a
-
-# Show routing table
-netstat -rn
-
-# Show network statistics
-netstat -i
-
-# Show active connections
-netstat -an
-
-# Show multicast groups
-netstat -g
-```
+### Why Focus on Linux?
+- **Container Environment**: Practice containers use Linux
+- **Industry Standard**: Most servers run Linux
+- **Modern Tools**: `ip` command is more powerful than `ifconfig`
+- **Learning Value**: Understanding Linux networking is more valuable
