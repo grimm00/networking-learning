@@ -266,43 +266,6 @@ netstat -i
 netstat -s
 ```
 
-### ss (Linux - Primary)
-**Purpose**: Modern replacement for netstat (faster and more features)
-
-**Note**: This is the primary tool in Linux containers. macOS equivalent: `netstat`
-
-**Basic Syntax**:
-```bash
-ss [options]
-```
-
-**Common Options**:
-- `-t`: Show TCP connections
-- `-u`: Show UDP connections
-- `-l`: Show listening ports
-- `-n`: Show numeric addresses
-- `-p`: Show process IDs
-- `-r`: Show routing table
-- `-i`: Show interface statistics
-- `-s`: Show summary statistics
-
-**Examples**:
-```bash
-# Show all connections (Linux)
-ss -tuln
-
-# Show listening ports (Linux)
-ss -tuln | grep LISTEN
-
-# Show TCP connections (Linux)
-ss -t
-
-# Show UDP connections (Linux)
-ss -u
-
-# Show summary (Linux)
-ss -s
-```
 
 ## DNS and Name Resolution Commands
 
@@ -480,10 +443,10 @@ telnet google.com 80
 
 ### Diagnose Network Issues
 ```bash
-# Check IP configuration
+# Check IP configuration (Linux)
 ip addr show
 
-# Check routing table
+# Check routing table (Linux)
 ip route show
 
 # Test connectivity to gateway
@@ -495,30 +458,13 @@ cat /etc/resolv.conf
 
 ### Monitor Network Activity
 ```bash
-# Show active connections
-netstat -tuln
-
-# Show listening ports
+# Show listening ports (Linux)
 ss -tuln | grep LISTEN
 
 # Monitor network traffic
 sudo tcpdump -i any -n
 ```
 
-## Command Comparison
-
-### Modern vs Legacy Commands
-| Function | Modern | Legacy |
-|----------|--------|--------|
-| Interface config | `ip addr` | `ifconfig` |
-| Routing | `ip route` | `route` |
-| Statistics | `ss` | `netstat` |
-| Neighbor table | `ip neigh` | `arp` |
-
-### When to Use Which
-- **Use modern commands** (`ip`, `ss`) for new scripts and automation
-- **Use legacy commands** (`ifconfig`, `netstat`, `route`) for compatibility
-- **Learn both** as you may encounter either in different environments
 
 ## Troubleshooting Workflow
 
@@ -531,10 +477,10 @@ ifconfig
 
 ### 2. Check Network Layer
 ```bash
-# Check IP configuration
+# Check IP configuration (Linux)
 ip addr show
 
-# Check routing table
+# Check routing table (Linux)
 ip route show
 
 # Test connectivity
@@ -543,7 +489,7 @@ ping 8.8.8.8
 
 ### 3. Check Transport Layer
 ```bash
-# Check listening ports
+# Check listening ports (Linux)
 ss -tuln
 
 # Test specific ports
@@ -567,20 +513,18 @@ curl -I http://hostname
 ping destination
 traceroute destination
 
-# Configuration
+# Configuration (Linux)
 ip addr show
 ip route show
 
-# Statistics
+# Statistics (Linux)
 ss -tuln
-netstat -tuln
 
 # DNS
 nslookup hostname
 dig hostname
 
-# ARP
-arp -a
+# ARP (Linux)
 ip neigh show
 ```
 
@@ -592,59 +536,16 @@ ip neigh show
 - `-t`: TCP only
 - `-u`: UDP only
 
-## Linux vs macOS Command Reference
+## Platform Reference
 
-### Primary Learning Environment
-**This guide focuses on Linux commands** (used in containers) with macOS equivalents shown for reference.
-
-### Command Equivalents Table
-| Function | Linux (Primary) | macOS (Reference) | Notes |
-|----------|-----------------|-------------------|-------|
-| **Interface config** | `ip addr show` | `ifconfig -a` | Linux: Modern, detailed |
-| **Route management** | `ip route show` | `route -n` | Linux: More flexible |
-| **ARP table** | `ip neigh show` | `arp -a` | Both work similarly |
-| **Network stats** | `ss -tuln` | `netstat -tuln` | Linux: Faster, more features |
-| **Packet capture** | `tcpdump` | `tcpdump` | Same command |
-| **Ping** | `ping` | `ping` | Same command |
-| **Traceroute** | `traceroute` | `traceroute` | Same command |
-| **DNS lookup** | `nslookup` | `nslookup` | Same command |
-| **Interface up/down** | `ip link set dev eth0 up` | `ifconfig eth0 up` | Linux: More precise |
-
-### Linux-First Examples
-```bash
-# Show all interfaces (Linux)
-ip addr show
-
-# Show routing table (Linux)
-ip route show
-
-# Show ARP table (Linux)
-ip neigh show
-
-# Show listening ports (Linux)
-ss -tuln
-
-# Bring interface up (Linux)
-sudo ip link set dev eth0 up
-```
-
-### macOS Equivalents
-```bash
-# Show all interfaces (macOS)
-ifconfig -a
-
-# Show routing table (macOS)
-netstat -rn
-
-# Show ARP table (macOS)
-arp -a
-
-# Show listening ports (macOS)
-netstat -tuln
-
-# Bring interface up (macOS)
-sudo ifconfig eth0 up
-```
+### Command Equivalents
+| Function | Linux (Primary) | macOS (Reference) |
+|----------|-----------------|-------------------|
+| **Interface config** | `ip addr show` | `ifconfig -a` |
+| **Route management** | `ip route show` | `route -n` |
+| **ARP table** | `ip neigh show` | `arp -a` |
+| **Network stats** | `ss -tuln` | `netstat -tuln` |
+| **Interface up/down** | `ip link set dev eth0 up` | `ifconfig eth0 up` |
 
 ### Installing Linux Tools on macOS
 ```bash
@@ -652,13 +553,10 @@ sudo ifconfig eth0 up
 brew install iproute2mac
 
 # Install additional networking tools
-brew install nmap
-brew install tcpdump
-brew install wireshark
+brew install nmap tcpdump wireshark
 ```
 
 ### Why Focus on Linux?
 - **Container Environment**: Practice containers use Linux
 - **Industry Standard**: Most servers run Linux
-- **Modern Tools**: `ip` command is more powerful than `ifconfig`
-- **Learning Value**: Understanding Linux networking is more valuable
+- **Modern Tools**: `ip` and `ss` are more powerful than legacy alternatives
