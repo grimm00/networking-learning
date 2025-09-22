@@ -196,7 +196,7 @@ class DNSAnalyzer:
 
 def main():
     parser = argparse.ArgumentParser(description="DNS Analyzer Tool")
-    parser.add_argument("domain", help="Domain to analyze")
+    parser.add_argument("domain", nargs='?', help="Domain to analyze")
     parser.add_argument("-s", "--server", help="DNS server to use")
     parser.add_argument("-t", "--trace", action="store_true", help="Trace DNS resolution")
     parser.add_argument("-p", "--performance", type=int, default=0, help="Run performance test (number of iterations)")
@@ -206,28 +206,45 @@ def main():
     
     args = parser.parse_args()
     
-    analyzer = DNSAnalyzer(args.domain, args.server)
+    # Check if we have either a domain or reverse IP
+    if not args.domain and not args.reverse:
+        parser.error("Either domain or --reverse IP address is required")
     
-    # Basic analysis
-    analyzer.analyze_domain()
+    # Determine if this is reverse lookup only
+    reverse_only = args.reverse and not args.domain
     
-    # Optional tests
-    if args.trace:
-        analyzer.trace_resolution()
+    # If doing reverse lookup, use the IP as the "domain" for display purposes
+    if reverse_only:
+        args.domain = args.reverse
     
-    if args.test_servers:
-        analyzer.test_dns_servers()
+    analyzer = DNSAnalyzer(args.domain or "reverse-lookup", args.server)
     
-    if args.dnssec:
-        analyzer.check_dnssec()
-    
-    if args.reverse:
+    # If doing reverse lookup only, skip domain analysis
+    if reverse_only:
+        print(f"🔄 Reverse DNS lookup for: {args.reverse}")
+        print("=" * 50)
         analyzer.reverse_dns_lookup(args.reverse)
+    else:
+        # Basic analysis
+        analyzer.analyze_domain()
+        
+        # Optional tests
+        if args.trace:
+            analyzer.trace_resolution()
+        
+        if args.test_servers:
+            analyzer.test_dns_servers()
+        
+        if args.dnssec:
+            analyzer.check_dnssec()
+        
+        if args.reverse:
+            analyzer.reverse_dns_lookup(args.reverse)
+        
+        if args.performance > 0:
+            analyzer.performance_test(args.performance)
     
-    if args.performance > 0:
-        analyzer.performance_test(args.performance)
-    
-    print(f"\n✅ Analysis complete for {args.domain}")
+    print(f"\n✅ Analysis complete for {args.domain or args.reverse}")
 
 if __name__ == "__main__":
     main()
