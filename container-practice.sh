@@ -122,9 +122,11 @@ enter_practice() {
     print_header "Entering Practice Container: $container"
     print_warning "You can now run networking commands safely!"
     print_warning "Type 'exit' to return to host system"
+    print_info "The 'run' command is available for easy script execution"
+    print_info "Try: run help or run list"
     echo ""
     
-    docker exec -it $container bash
+    docker exec -it $container /scripts/start-with-run.sh
 }
 
 # Function to run specific practice exercises
