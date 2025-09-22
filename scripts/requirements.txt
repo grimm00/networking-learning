@@ -1,0 +1,44 @@
+# Python dependencies for networking learning project
+
+# Core networking tools
+requests>=2.31.0          # HTTP/HTTPS requests (http-analyzer.py)
+urllib3>=2.0.7            # HTTP client library
+
+# Network analysis and utilities
+scapy>=2.5.0              # Network packet manipulation
+psutil>=5.9.6             # System and process utilities
+netifaces>=0.11.0         # Network interface information
+
+# IP address handling
+ipaddress                 # Built-in Python module for IP address manipulation (ipv4-calculator.py)
+
+# Data visualization (optional for advanced analysis)
+matplotlib>=3.7.2         # Plotting and visualization
+plotly>=5.15.0            # Interactive plots
+
+# CLI and output formatting
+click>=8.1.7              # Command line interface creation
+rich>=13.5.2              # Rich text and beautiful formatting
+tabulate>=0.9.0           # Pretty-print tabular data
+
+# Testing and development
+pytest>=7.4.0             # Testing framework
+pytest-cov>=4.1.0         # Coverage testing
+black>=23.7.0              # Code formatting
+flake8>=6.0.0             # Linting
+
+# Note: The following are built-in Python modules used by our scripts:
+# - argparse (command line argument parsing)
+# - json (JSON handling)
+# - socket (network socket programming)
+# - ssl (SSL/TLS support)
+# - subprocess (running system commands)
+# - sys (system-specific parameters)
+# - time (time-related functions)
+# - typing (type hints)
+# - datetime (date and time handling)
+# - urllib.parse (URL parsing)
+# - concurrent.futures (parallel execution)
+# - threading (threading support)
+# - statistics (statistical functions)
+# - math (mathematical functions)
