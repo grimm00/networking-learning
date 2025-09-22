@@ -109,7 +109,12 @@ show_scenarios() {
     echo "   - Container: net-practice"
     
     echo ""
-    echo "9. All Project Scripts"
+    echo "9. NTP Analysis"
+    echo "   - ntp-analyzer.py, ntp-troubleshoot.sh"
+    echo "   - Container: net-practice"
+    
+    echo ""
+    echo "10. All Project Scripts"
     echo "   - Python tools: /scripts/*.py"
     echo "   - Shell scripts: /scripts/*.sh"
     echo "   - Container: net-practice"
@@ -239,6 +244,22 @@ run_ssh_analysis() {
     fi
 }
 
+# Function to run NTP analysis tools
+run_ntp_analysis() {
+    local container=${1:-net-practice}
+    local server=${2:-"pool.ntp.org"}
+    local port=${3:-"123"}
+    
+    print_header "Running NTP Analysis for $server:$port"
+    
+    echo "🔍 NTP Analyzer (Python):"
+    docker exec $container python3 /scripts/ntp-analyzer.py "$server" -p "$port"
+    
+    echo ""
+    echo "🛠️ NTP Troubleshoot (Shell):"
+    docker exec $container /scripts/ntp-troubleshoot.sh "$server" -p "$port"
+}
+
 # Function to list all available scripts
 list_scripts() {
     local container=${1:-net-practice}
@@ -269,11 +290,12 @@ show_menu() {
     echo "6. Run Specific Command"
     echo "7. Run DNS Analysis"
     echo "8. Run SSH Analysis"
-    echo "9. List All Scripts"
-    echo "10. Show Available Scenarios"
-    echo "11. Exit"
+    echo "9. Run NTP Analysis"
+    echo "10. List All Scripts"
+    echo "11. Show Available Scenarios"
+    echo "12. Exit"
     echo ""
-    read -p "Choose an option (1-11): " choice
+    read -p "Choose an option (1-12): " choice
     
     case $choice in
         1)
@@ -322,12 +344,17 @@ show_menu() {
             run_ssh_analysis net-practice ${host:-localhost} ${port:-22} "$username"
             ;;
         9)
-            list_scripts net-practice
+            read -p "Enter NTP server to analyze (default: pool.ntp.org): " server
+            read -p "Enter NTP port (default: 123): " port
+            run_ntp_analysis net-practice ${server:-pool.ntp.org} ${port:-123}
             ;;
         10)
-            show_scenarios
+            list_scripts net-practice
             ;;
         11)
+            show_scenarios
+            ;;
+        12)
             print_success "Goodbye!"
             exit 0
             ;;
@@ -369,6 +396,11 @@ if [ $# -gt 0 ]; then
             read -p "Enter username (optional): " username
             run_ssh_analysis net-practice ${host:-localhost} ${port:-22} "$username"
             ;;
+        ntp)
+            read -p "Enter NTP server to analyze (default: pool.ntp.org): " server
+            read -p "Enter NTP port (default: 123): " port
+            run_ntp_analysis net-practice ${server:-pool.ntp.org} ${port:-123}
+            ;;
         scenarios)
             show_scenarios
             ;;
@@ -376,7 +408,7 @@ if [ $# -gt 0 ]; then
             list_scripts net-practice
             ;;
         *)
-            echo "Usage: $0 {start|stop|enter|exercises|info|run|dns|ssh|scenarios|list-scripts}"
+            echo "Usage: $0 {start|stop|enter|exercises|info|run|dns|ssh|ntp|scenarios|list-scripts}"
             echo "  start         - Start the networking environment"
             echo "  stop          - Stop the networking environment"
             echo "  enter         - Enter practice container"
@@ -385,6 +417,7 @@ if [ $# -gt 0 ]; then
             echo "  run           - Run specific command"
             echo "  dns           - Run DNS analysis"
             echo "  ssh           - Run SSH analysis"
+            echo "  ntp           - Run NTP analysis"
             echo "  scenarios     - Show available scenarios"
             echo "  list-scripts  - List all available scripts"
             exit 1
