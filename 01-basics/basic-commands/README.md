@@ -105,6 +105,8 @@ traceroute to google.com (142.250.191.14), 64 hops max, 52 byte packets
 ### ip
 **Purpose**: Modern network configuration and information tool
 
+**Note**: Not available on macOS by default. Install with: `brew install iproute2mac`
+
 **Basic Syntax**:
 ```bash
 ip [object] [command] [options]
@@ -143,6 +145,8 @@ sudo ip route del 192.168.2.0/24
 ### ifconfig
 **Purpose**: Legacy network interface configuration (deprecated but still used)
 
+**Note**: Default network configuration tool on macOS. Use `ip` command on Linux for modern functionality.
+
 **Basic Syntax**:
 ```bash
 ifconfig [interface] [options]
@@ -166,6 +170,8 @@ sudo ifconfig eth0 down
 
 ### route
 **Purpose**: Legacy routing table management (deprecated but still used)
+
+**Note**: Available on both macOS and Linux. Modern alternative is `ip route` on Linux.
 
 **Basic Syntax**:
 ```bash
@@ -548,3 +554,43 @@ ip neigh show
 - `-l`: Show listening
 - `-t`: TCP only
 - `-u`: UDP only
+
+## macOS-Specific Notes
+
+### Installing Modern Tools
+```bash
+# Install ip command (Linux equivalent)
+brew install iproute2mac
+
+# Install additional networking tools
+brew install nmap
+brew install tcpdump
+brew install wireshark
+```
+
+### macOS vs Linux Command Equivalents
+| Function | macOS | Linux |
+|----------|-------|-------|
+| Interface config | `ifconfig` | `ip addr` |
+| Route management | `route` | `ip route` |
+| ARP table | `arp -a` | `ip neigh` |
+| Network stats | `netstat` | `ss` |
+| Packet capture | `tcpdump` | `tcpdump` |
+
+### macOS-Specific Commands
+```bash
+# Show all network interfaces
+ifconfig -a
+
+# Show routing table
+netstat -rn
+
+# Show network statistics
+netstat -i
+
+# Show active connections
+netstat -an
+
+# Show multicast groups
+netstat -g
+```
