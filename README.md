@@ -64,6 +64,22 @@ networking/
 - ✅ **Easy Reset**: Just restart containers to clean state
 - ✅ **Full Tools**: All networking tools pre-installed
 
+### Local Development Setup
+**For development and local testing:**
+
+```bash
+# Run setup script
+./setup.sh
+
+# Or manually install dependencies
+pip3 install -r requirements.txt
+```
+
+**System Requirements:**
+- Python 3.8+ with pip
+- Common networking tools (curl, wget, ping, etc.)
+- See `CONTAINER_REQUIREMENTS.md` for full details
+
 ## Learning Path
 
 ### Phase 1: Fundamentals (Week 1-2)
