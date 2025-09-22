@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Networking Practice Server</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { color: #333; }
+        .info { background: #f0f0f0; padding: 20px; border-radius: 5px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 Networking Practice Server</h1>
+        <div class="info">
+            <h2>Server Information</h2>
+            <p><strong>Server:</strong> nginx/1.x</p>
+            <p><strong>Purpose:</strong> HTTP/HTTPS protocol testing</p>
+            <p><strong>Container:</strong> web-server</p>
+        </div>
+        <div class="info">
+            <h2>Available Endpoints</h2>
+            <ul>
+                <li><a href="/">/ - This page</a></li>
+                <li><a href="/status">/status - Server status</a></li>
+                <li><a href="/api/info">/api/info - API information</a></li>
+            </ul>
+        </div>
+        <div class="info">
+            <h2>Testing Commands</h2>
+            <pre>
+# Test HTTP connectivity
+curl http://web-server
+curl http://localhost:8080
+
+# Test with different methods
+curl -X POST http://web-server/api/test
+curl -X GET http://web-server/status
+
+# Test with headers
+curl -H "User-Agent: TestClient" http://web-server
+            </pre>
+        </div>
+    </div>
+</body>
+</html>

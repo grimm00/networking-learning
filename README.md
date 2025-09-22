@@ -37,8 +37,32 @@ networking/
 │   ├── bandwidth-test.py             # Bandwidth testing
 │   └── port-scanner.py               # Port scanning utility
 ├── docker-compose.yml                # Docker services for network simulation
+├── container-practice.sh             # Containerized practice script
+├── CONTAINER_PRACTICE.md             # Container practice guide
 └── requirements.txt                  # Python dependencies
 ```
+
+## 🚀 Quick Start
+
+### Containerized Practice (Recommended)
+**Perfect for safe learning during meetings or training sessions!**
+
+```bash
+# Start the networking practice environment
+./container-practice.sh start
+
+# Enter practice container
+./container-practice.sh enter
+
+# Run practice exercises
+./container-practice.sh exercises
+```
+
+**Why Use Containers?**
+- ✅ **Safe Environment**: Practice without affecting your host system
+- ✅ **Meeting-Safe**: Learn during Zoom sessions without risk
+- ✅ **Easy Reset**: Just restart containers to clean state
+- ✅ **Full Tools**: All networking tools pre-installed
 
 ## Learning Path
 

@@ -1,0 +1,6 @@
+# Custom hosts file for networking practice
+127.0.0.1 localhost
+172.20.0.10 web-server.local
+172.20.0.11 database.local
+172.20.0.12 dns-server.local
+172.21.0.10 target-server.local

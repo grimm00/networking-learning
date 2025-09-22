@@ -26,7 +26,7 @@ services:
     networks:
       - backend
     ports:
-      - "5432:5432"
+      - "5433:5432"
 
   # DNS server for DNS testing
   dns-server:
@@ -77,6 +77,32 @@ services:
     command: tail -f /dev/null
     volumes:
       - ./tools:/tools
+      - ./01-basics/basic-commands:/commands
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+
+  # Networking practice container with full tools
+  net-practice:
+    image: ubuntu:22.04
+    container_name: net-practice
+    networks:
+      - frontend
+      - backend
+    command: |
+      bash -c "
+        apt-get update &&
+        apt-get install -y iproute2 net-tools traceroute iputils-ping tcpdump curl wget dnsutils nmap iptables net-tools &&
+        tail -f /dev/null
+      "
+    volumes:
+      - ./01-basics/basic-commands:/commands
+      - ./tools:/tools
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+      - SYS_ADMIN
+    privileged: true
 
   # Router simulation (using Linux routing)
   router:
@@ -88,10 +114,41 @@ services:
       - backend
     command: |
       sh -c "
+        apk add --no-cache iproute2 iptables &&
         echo 'net.ipv4.ip_forward=1' >> /etc/sysctl.conf &&
         sysctl -p &&
         tail -f /dev/null
       "
+
+  # Target server for testing
+  target-server:
+    image: nginx:alpine
+    container_name: target-server
+    networks:
+      - backend
+    ports:
+      - "8081:80"
+    volumes:
+      - ./02-protocols/http-https/html:/usr/share/nginx/html
+
+  # Firewall testing container
+  firewall-test:
+    image: ubuntu:22.04
+    container_name: firewall-test
+    networks:
+      - frontend
+    command: |
+      bash -c "
+        apt-get update &&
+        apt-get install -y iptables net-tools iproute2 &&
+        tail -f /dev/null
+      "
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    privileged: true
+    volumes:
+      - ./tools:/tools
 
 networks:
   frontend:
