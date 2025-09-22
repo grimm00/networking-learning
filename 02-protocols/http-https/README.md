@@ -1,14 +1,15 @@
-# HTTP/HTTPS Protocol Analysis
+# HTTP/HTTPS Protocol Deep Dive
 
-Learn about web protocols through hands-on analysis and testing.
+A comprehensive guide to understanding HTTP and HTTPS protocols through hands-on analysis, testing, and troubleshooting.
 
 ## What You'll Learn
 
-- HTTP request/response cycle
-- HTTP methods and status codes
-- HTTPS encryption and certificates
-- Headers and cookies
-- Performance optimization
+- **HTTP Fundamentals**: Request/response cycle, methods, status codes
+- **HTTPS Security**: SSL/TLS encryption, certificates, handshake process
+- **Headers & Cookies**: Understanding HTTP headers and session management
+- **Performance Analysis**: Response times, caching, compression
+- **Troubleshooting**: Common issues and diagnostic techniques
+- **Modern Web**: HTTP/2, HTTP/3, and web performance optimization
 
 ## Exercises
 
@@ -185,15 +186,56 @@ curl -H "User-Agent: Test" http://localhost:8080
 nslookup localhost
 ```
 
+## HTTP Analysis Tools
+
+### Python HTTP Analyzer
+Comprehensive HTTP/HTTPS analysis tool with detailed reporting:
+
+```bash
+# Basic analysis
+python http-analyzer.py https://google.com
+
+# Test different HTTP methods
+python http-analyzer.py -m https://google.com
+
+# Performance testing
+python http-analyzer.py -p 10 https://google.com
+
+# Test redirects
+python http-analyzer.py -r https://google.com
+```
+
+### Shell Troubleshooting Script
+Advanced HTTP troubleshooting and diagnostics:
+
+```bash
+# Basic troubleshooting
+./http-troubleshoot.sh https://google.com
+
+# Comprehensive analysis
+./http-troubleshoot.sh -a https://google.com
+
+# Performance testing
+./http-troubleshoot.sh -p 10 https://google.com
+
+# SSL/HTTPS testing
+./http-troubleshoot.sh -s https://google.com
+```
+
 ## Lab Exercises
 
 Run the included scripts for hands-on practice:
 
 ```bash
-./http-analysis.sh        # Basic HTTP analysis
-./https-analysis.sh       # HTTPS and SSL analysis
-./performance-test.sh     # Performance testing
-./security-test.sh        # Security testing
+# Python tools
+python http-analyzer.py [URL] [options]
+
+# Shell tools  
+./http-troubleshoot.sh [URL] [options]
+
+# Containerized practice
+./container-practice.sh enter
+python /scripts/http-analyzer.py [URL]
 ```
 
 ## Tools and Resources
