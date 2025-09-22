@@ -94,6 +94,8 @@ services:
         apt-get update &&
         apt-get install -y iproute2 net-tools traceroute iputils-ping tcpdump curl wget dnsutils nmap iptables net-tools python3 python3-pip python3-dev build-essential &&
         pip install -r /scripts/requirements.txt &&
+        echo 'source /scripts/init-run.sh' >> /root/.bashrc &&
+        echo 'source /scripts/init-run.sh' >> /etc/bash.bashrc &&
         tail -f /dev/null
       "
     volumes:
