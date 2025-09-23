@@ -1,1 +1,1 @@
-../../scripts/ntp-troubleshoot.sh
+../../../scripts/ntp-troubleshoot.sh

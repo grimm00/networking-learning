@@ -321,7 +321,7 @@ print_usage() {
     echo "  - DNS analysis: python3 scripts/dns-analyzer.py"
     echo "  - HTTP analysis: python3 scripts/http-analyzer.py"
     echo "  - Packet capture: python3 scripts/tcpdump-analyzer.py"
-    echo "  - Interactive labs: ./04-network-analysis/tcpdump/tcpdump-lab.sh"
+    echo "  - Interactive labs: ./modules/04-network-analysis/tcpdump/tcpdump-lab.sh"
     echo ""
     echo "Documentation:"
     echo "  - README.md - Project overview"

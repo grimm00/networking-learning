@@ -1,1 +1,1 @@
-../../scripts/ssh-troubleshoot.sh
+../../../scripts/ssh-troubleshoot.sh

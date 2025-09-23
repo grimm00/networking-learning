@@ -1,1 +1,1 @@
-../../scripts/network-design-lab.sh
+../../../scripts/network-design-lab.sh

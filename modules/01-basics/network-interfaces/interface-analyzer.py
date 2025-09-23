@@ -1,1 +1,1 @@
-../../scripts/interface-analyzer.py
+../../../scripts/interface-analyzer.py

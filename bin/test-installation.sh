@@ -43,10 +43,10 @@ run_test() {
     
     if eval "$test_command" >/dev/null 2>&1; then
         print_success "$test_name"
-        ((TESTS_PASSED++))
+        TESTS_PASSED=$((TESTS_PASSED + 1))
     else
         print_error "$test_name"
-        ((TESTS_FAILED++))
+        TESTS_FAILED=$((TESTS_FAILED + 1))
     fi
 }
 
@@ -59,12 +59,12 @@ test_python() {
     
     # Test Python version compatibility
     python_version=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
-    if [[ $(echo "$python_version >= 3.8" | bc -l 2>/dev/null || echo "1") -eq 1 ]]; then
+    if [[ $(echo "$python_version >= 3.8" | bc -l 2>/dev/null || echo "1") == "1" ]]; then
         print_success "Python version compatible ($python_version)"
-        ((TESTS_PASSED++))
+        TESTS_PASSED=$((TESTS_PASSED + 1))
     else
         print_error "Python version incompatible ($python_version, need 3.8+)"
-        ((TESTS_FAILED++))
+        TESTS_FAILED=$((TESTS_FAILED + 1))
     fi
 }
 
@@ -126,10 +126,10 @@ test_docker() {
         # Test if Docker daemon is running
         if docker info >/dev/null 2>&1; then
             print_success "Docker daemon running"
-            ((TESTS_PASSED++))
+            TESTS_PASSED=$((TESTS_PASSED + 1))
         else
             print_warning "Docker daemon not running"
-            ((TESTS_FAILED++))
+            TESTS_FAILED=$((TESTS_FAILED + 1))
         fi
     else
         print_warning "Docker not installed (optional for containerized environment)"
@@ -144,7 +144,7 @@ test_container_environment() {
         # Check if container is running
         if docker ps | grep -q "net-practice"; then
             print_success "Container environment running"
-            ((TESTS_PASSED++))
+            TESTS_PASSED=$((TESTS_PASSED + 1))
             
             # Test container tools
             run_test "Container ping" "docker exec net-practice ping -c 1 8.8.8.8"
@@ -152,7 +152,7 @@ test_container_environment() {
             run_test "Container interface-analyzer" "docker exec net-practice python3 /scripts/interface-analyzer.py --help"
         else
             print_warning "Container environment not running (run ./container-practice.sh start)"
-            ((TESTS_FAILED++))
+            TESTS_FAILED=$((TESTS_FAILED + 1))
         fi
     else
         print_warning "Docker not available for container testing"
@@ -185,8 +185,9 @@ test_project_structure() {
     run_test "Requirements file" "test -f requirements.txt"
     run_test "Docker compose file" "test -f docker-compose.yml"
     run_test "Scripts directory" "test -d scripts"
-    run_test "Basics directory" "test -d 01-basics"
-    run_test "Protocols directory" "test -d 02-protocols"
+    run_test "Modules directory" "test -d modules"
+    run_test "Basics module" "test -d modules/01-basics"
+    run_test "Protocols module" "test -d modules/02-protocols"
     run_test "Admin documentation" "test -d admin"
 }
 
@@ -200,12 +201,12 @@ test_performance() {
     end_time=$(date +%s.%N)
     execution_time=$(echo "$end_time - $start_time" | bc)
     
-    if (( $(echo "$execution_time < 2.0" | bc -l) )); then
+    if [[ $(echo "$execution_time < 2.0" | bc -l) == "1" ]]; then
         print_success "Script performance good (${execution_time}s)"
-        ((TESTS_PASSED++))
+        TESTS_PASSED=$((TESTS_PASSED + 1))
     else
         print_warning "Script performance slow (${execution_time}s)"
-        ((TESTS_FAILED++))
+        TESTS_FAILED=$((TESTS_FAILED + 1))
     fi
 }
 

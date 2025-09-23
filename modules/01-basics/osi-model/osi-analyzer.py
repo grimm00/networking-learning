@@ -1,1 +1,1 @@
-../../scripts/osi-analyzer.py
+../../../scripts/osi-analyzer.py

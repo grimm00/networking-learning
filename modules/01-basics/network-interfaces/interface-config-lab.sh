@@ -1,1 +1,1 @@
-../../scripts/interface-config-lab.sh
+../../../scripts/interface-config-lab.sh

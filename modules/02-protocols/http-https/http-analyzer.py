@@ -1,1 +1,1 @@
-../../scripts/http-analyzer.py
+../../../scripts/http-analyzer.py

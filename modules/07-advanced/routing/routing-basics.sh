@@ -1,1 +1,1 @@
-../../scripts/routing-basics.sh
+../../../scripts/routing-basics.sh

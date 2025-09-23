@@ -1,1 +1,1 @@
-../../scripts/layer-analysis.sh
+../../../scripts/layer-analysis.sh

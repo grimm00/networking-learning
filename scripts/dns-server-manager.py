@@ -18,7 +18,7 @@ class DNSServerManager:
     
     def __init__(self, verbose: bool = False):
         self.verbose = verbose
-        self.config_dir = Path("05-dns-server")
+        self.config_dir = Path("modules/05-dns-server")
         self.zones_dir = self.config_dir / "zones"
         self.configs_dir = self.config_dir / "coredns-configs"
         

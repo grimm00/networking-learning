@@ -1,1 +1,1 @@
-../../scripts/protocol-identification.sh
+../../../scripts/protocol-identification.sh

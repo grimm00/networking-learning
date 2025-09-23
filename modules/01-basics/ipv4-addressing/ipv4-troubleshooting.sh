@@ -1,1 +1,1 @@
-../../scripts/ipv4-troubleshooting.sh
+../../../scripts/ipv4-troubleshooting.sh

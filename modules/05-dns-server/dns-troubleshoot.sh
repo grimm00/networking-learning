@@ -1,1 +1,1 @@
-../scripts/dns-troubleshoot.sh
+../../../scripts/dns-troubleshoot.sh

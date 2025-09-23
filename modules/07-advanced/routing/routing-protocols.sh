@@ -1,1 +1,1 @@
-../../scripts/routing-protocols.sh
+../../../scripts/routing-protocols.sh

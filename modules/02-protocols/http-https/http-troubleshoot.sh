@@ -1,1 +1,1 @@
-../../scripts/http-troubleshoot.sh
+../../../scripts/http-troubleshoot.sh

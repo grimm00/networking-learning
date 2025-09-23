@@ -1,1 +1,1 @@
-../../scripts/interface-troubleshoot.sh
+../../../scripts/interface-troubleshoot.sh

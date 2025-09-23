@@ -1,1 +1,1 @@
-../scripts/dns-server-manager.py
+../../../scripts/dns-server-manager.py

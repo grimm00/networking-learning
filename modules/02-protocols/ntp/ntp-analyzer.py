@@ -1,1 +1,1 @@
-../../scripts/ntp-analyzer.py
+../../../scripts/ntp-analyzer.py

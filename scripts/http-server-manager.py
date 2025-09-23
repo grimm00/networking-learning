@@ -19,7 +19,7 @@ class HTTPServerManager:
     
     def __init__(self, verbose: bool = False):
         self.verbose = verbose
-        self.config_dir = Path("06-http-servers")
+        self.config_dir = Path("modules/06-http-servers")
         self.nginx_configs_dir = self.config_dir / "nginx-configs"
         self.apache_configs_dir = self.config_dir / "apache-configs"
         

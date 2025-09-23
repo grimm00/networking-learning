@@ -1,1 +1,1 @@
-../../scripts/dns-analyzer.py
+../../../scripts/dns-analyzer.py

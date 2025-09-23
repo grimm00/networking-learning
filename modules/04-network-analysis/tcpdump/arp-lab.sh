@@ -1,1 +1,1 @@
-../../scripts/arp-lab.sh
+../../../scripts/arp-lab.sh

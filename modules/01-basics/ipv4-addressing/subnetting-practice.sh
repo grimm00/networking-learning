@@ -1,1 +1,1 @@
-../../scripts/subnetting-practice.sh
+../../../scripts/subnetting-practice.sh

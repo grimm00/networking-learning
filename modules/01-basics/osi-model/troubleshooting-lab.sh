@@ -1,1 +1,1 @@
-../../scripts/troubleshooting-lab.sh
+../../../scripts/troubleshooting-lab.sh

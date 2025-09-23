@@ -1,1 +1,1 @@
-../../scripts/routing-troubleshooting.sh
+../../../scripts/routing-troubleshooting.sh

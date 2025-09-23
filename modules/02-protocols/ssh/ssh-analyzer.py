@@ -1,1 +1,1 @@
-../../scripts/ssh-analyzer.py
+../../../scripts/ssh-analyzer.py
