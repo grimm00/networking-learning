@@ -1,0 +1,57 @@
+; Zone file for example.com
+; Public domain DNS records
+
+$TTL 3600
+$ORIGIN example.com.
+
+; Start of Authority record
+@       IN      SOA     ns1.example.com. admin.example.com. (
+                        2024010101      ; Serial number
+                        3600            ; Refresh interval
+                        1800            ; Retry interval
+                        604800          ; Expire time
+                        86400           ; Minimum TTL
+                        )
+
+; Name servers
+@       IN      NS      ns1.example.com.
+@       IN      NS      ns2.example.com.
+
+; A records - IPv4 addresses
+@       IN      A       203.0.113.100
+ns1     IN      A       203.0.113.101
+ns2     IN      A       203.0.113.102
+www     IN      A       203.0.113.100
+mail    IN      A       203.0.113.103
+ftp     IN      A       203.0.113.104
+blog    IN      A       203.0.113.105
+shop    IN      A       203.0.113.106
+
+; AAAA records - IPv6 addresses
+@       IN      AAAA    2001:db8::100
+www     IN      AAAA    2001:db8::100
+mail    IN      AAAA    2001:db8::103
+
+; CNAME records - aliases
+web     IN      CNAME   www.example.com.
+smtp    IN      CNAME   mail.example.com.
+
+; MX records - mail servers
+@       IN      MX      10 mail.example.com.
+@       IN      MX      20 backup-mail.example.com.
+
+; TXT records - text records
+@       IN      TXT     "v=spf1 mx ~all"
+_dmarc  IN      TXT     "v=DMARC1; p=quarantine; rua=mailto:dmarc@example.com"
+_domainkey IN   TXT     "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC..."
+
+; SRV records - service records
+_http._tcp     IN      SRV     10 5 80 www.example.com.
+_https._tcp    IN      SRV     10 5 443 www.example.com.
+_smtp._tcp     IN      SRV     10 5 25 mail.example.com.
+_smtps._tcp    IN      SRV     10 5 465 mail.example.com.
+_submission._tcp IN    SRV     10 5 587 mail.example.com.
+
+; PTR records for reverse DNS (if applicable)
+100.113.0.203.in-addr.arpa. IN PTR www.example.com.
+103.113.0.203.in-addr.arpa. IN PTR mail.example.com.

@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  coredns:
+    image: coredns/coredns:latest
+    container_name: coredns-server
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"
+      - "8080:8080"  # Health check endpoint
+      - "9153:9153"  # Prometheus metrics
+    volumes:
+      - ./coredns-configs:/etc/coredns:ro
+      - ./zones:/etc/coredns/zones:ro
+      - ./logs:/var/log/coredns
+    command: ["-conf", "/etc/coredns/basic.conf"]
+    restart: unless-stopped
+    networks:
+      - dns-network
+    healthcheck:
+      test: ["CMD", "dig", "@localhost", "google.com", "+short"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  coredns-advanced:
+    image: coredns/coredns:latest
+    container_name: coredns-advanced
+    ports:
+      - "5353:53/udp"
+      - "5353:53/tcp"
+      - "8081:8080"  # Health check endpoint
+      - "9154:9153"  # Prometheus metrics
+    volumes:
+      - ./coredns-configs:/etc/coredns:ro
+      - ./zones:/etc/coredns/zones:ro
+      - ./logs:/var/log/coredns
+    command: ["-conf", "/etc/coredns/advanced.conf"]
+    restart: unless-stopped
+    networks:
+      - dns-network
+    profiles:
+      - advanced
+
+  coredns-secure:
+    image: coredns/coredns:latest
+    container_name: coredns-secure
+    ports:
+      - "5354:53/udp"
+      - "5354:53/tcp"
+      - "8082:8080"  # Health check endpoint
+      - "9155:9153"  # Prometheus metrics
+    volumes:
+      - ./coredns-configs:/etc/coredns:ro
+      - ./zones:/etc/coredns/zones:ro
+      - ./logs:/var/log/coredns
+    command: ["-conf", "/etc/coredns/secure.conf"]
+    restart: unless-stopped
+    networks:
+      - dns-network
+    profiles:
+      - secure
+
+  dns-test-client:
+    image: alpine:latest
+    container_name: dns-test-client
+    command: ["tail", "-f", "/dev/null"]
+    depends_on:
+      - coredns
+    networks:
+      - dns-network
+    profiles:
+      - testing
+
+networks:
+  dns-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

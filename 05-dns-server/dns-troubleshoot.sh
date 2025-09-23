@@ -1,0 +1,1 @@
+../scripts/dns-troubleshoot.sh

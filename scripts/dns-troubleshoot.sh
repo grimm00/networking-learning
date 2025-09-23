@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # DNS Troubleshooting Script
-# Comprehensive DNS diagnostic tool
+# Comprehensive DNS diagnostics and testing
 
 set -e
 
@@ -10,6 +10,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Function to print colored output
@@ -27,375 +28,318 @@ print_warning() {
     echo -e "${YELLOW}⚠️  $1${NC}"
 }
 
+print_info() {
+    echo -e "${CYAN}ℹ️  $1${NC}"
+}
+
 print_error() {
     echo -e "${RED}❌ $1${NC}"
 }
 
-# Function to check if command exists
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
-}
-
-# Function to test DNS resolution
-test_dns_resolution() {
-    local domain=$1
-    local dns_server=$2
-    
-    print_header "Testing DNS Resolution for $domain"
-    
-    if [ -n "$dns_server" ]; then
-        echo "Using DNS server: $dns_server"
-        dig @$dns_server $domain +short
-    else
-        echo "Using system DNS servers"
-        dig $domain +short
-    fi
-}
-
-# Function to check DNS configuration
-check_dns_config() {
-    print_header "DNS Configuration Check"
-    
-    echo "📋 /etc/resolv.conf:"
-    if [ -f /etc/resolv.conf ]; then
-        cat /etc/resolv.conf
-    else
-        print_warning "/etc/resolv.conf not found"
-    fi
-    
-    echo -e "\n📋 /etc/hosts:"
-    if [ -f /etc/hosts ]; then
-        cat /etc/hosts
-    else
-        print_warning "/etc/hosts not found"
-    fi
-    
-    # Check systemd-resolved if available
-    if command_exists systemctl; then
-        echo -e "\n📋 systemd-resolved status:"
-        if systemctl is-active --quiet systemd-resolved; then
-            print_success "systemd-resolved is active"
-            resolvectl status 2>/dev/null || echo "resolvectl not available"
-        else
-            print_warning "systemd-resolved is not active"
-        fi
-    fi
-}
-
-# Function to test different DNS servers
-test_dns_servers() {
-    local domain=$1
-    
-    print_header "Testing Different DNS Servers"
-    
-    local servers=(
-        "8.8.8.8:Google DNS"
-        "1.1.1.1:Cloudflare"
-        "9.9.9.9:Quad9"
-        "208.67.222.222:OpenDNS"
-    )
-    
-    for server_info in "${servers[@]}"; do
-        IFS=':' read -r server name <<< "$server_info"
-        echo -e "\n${BLUE}$name ($server):${NC}"
-        
-        if dig @$server $domain +short >/dev/null 2>&1; then
-            result=$(dig @$server $domain +short)
-            print_success "Resolved: $result"
-        else
-            print_error "Failed to resolve"
-        fi
-    done
-}
-
-# Function to trace DNS resolution
-trace_dns() {
-    local domain=$1
-    
-    print_header "Tracing DNS Resolution for $domain"
-    
-    if command_exists dig; then
-        dig +trace $domain
-    else
-        print_error "dig command not found"
-    fi
-}
-
-# Function to check specific record types
-check_record_types() {
-    local domain=$1
-    
-    print_header "Checking DNS Record Types for $domain"
-    
-    local record_types=("A" "AAAA" "MX" "NS" "TXT" "SOA" "CNAME")
-    
-    for record_type in "${record_types[@]}"; do
-        echo -e "\n${BLUE}$record_type Record:${NC}"
-        if dig $domain $record_type +short >/dev/null 2>&1; then
-            result=$(dig $domain $record_type +short)
-            if [ -n "$result" ]; then
-                print_success "$result"
-            else
-                print_warning "No $record_type record found"
-            fi
-        else
-            print_error "Failed to query $record_type record"
-        fi
-    done
-}
-
-# Function to check DNSSEC
-check_dnssec() {
-    local domain=$1
-    
-    print_header "Checking DNSSEC Support for $domain"
-    
-    if command_exists dig; then
-        if dig +dnssec $domain >/dev/null 2>&1; then
-            print_success "DNSSEC is supported"
-            dig +dnssec $domain | grep -E "(RRSIG|DNSKEY)" || echo "No DNSSEC records found"
-        else
-            print_warning "DNSSEC not supported or not configured"
-        fi
-    else
-        print_error "dig command not found"
-    fi
-}
-
-# Function to test DNS performance
-test_dns_performance() {
-    local domain=$1
-    local iterations=${2:-5}
-    
-    print_header "DNS Performance Test ($iterations iterations)"
-    
-    local times=()
-    
-    for ((i=1; i<=iterations; i++)); do
-        echo -n "Iteration $i: "
-        
-        start_time=$(date +%s%3N)
-        if dig $domain +short >/dev/null 2>&1; then
-            end_time=$(date +%s%3N)
-            duration=$((end_time - start_time))
-            times+=($duration)
-            echo "${duration}ms"
-        else
-            echo "Failed"
-        fi
-    done
-    
-    if [ ${#times[@]} -gt 0 ]; then
-        local sum=0
-        for time in "${times[@]}"; do
-            sum=$((sum + time))
-        done
-        local avg=$((sum / ${#times[@]}))
-        
-        local min=${times[0]}
-        local max=${times[0]}
-        for time in "${times[@]}"; do
-            if [ $time -lt $min ]; then min=$time; fi
-            if [ $time -gt $max ]; then max=$time; fi
-        done
-        
-        echo -e "\n📊 Performance Summary:"
-        echo "  Average: ${avg}ms"
-        echo "  Minimum: ${min}ms"
-        echo "  Maximum: ${max}ms"
-    fi
-}
-
-# Function to check DNS cache
-check_dns_cache() {
-    print_header "DNS Cache Check"
-    
-    if command_exists systemctl; then
-        if systemctl is-active --quiet systemd-resolved; then
-            echo "systemd-resolved cache statistics:"
-            resolvectl statistics 2>/dev/null || echo "Cache statistics not available"
-        else
-            print_warning "systemd-resolved not active"
-        fi
-    fi
-    
-    if command_exists nscd; then
-        if systemctl is-active --quiet nscd; then
-            echo -e "\nnscd cache statistics:"
-            nscd -g 2>/dev/null || echo "nscd statistics not available"
-        else
-            print_warning "nscd not active"
-        fi
-    fi
-}
-
-# Function to flush DNS cache
-flush_dns_cache() {
-    print_header "Flushing DNS Cache"
-    
-    if command_exists systemctl; then
-        if systemctl is-active --quiet systemd-resolved; then
-            print_success "Flushing systemd-resolved cache"
-            resolvectl flush-caches 2>/dev/null || print_warning "Failed to flush systemd-resolved cache"
-        fi
-    fi
-    
-    if command_exists nscd; then
-        if systemctl is-active --quiet nscd; then
-            print_success "Flushing nscd cache"
-            systemctl restart nscd 2>/dev/null || print_warning "Failed to restart nscd"
-        fi
-    fi
-    
-    print_success "DNS cache flush complete"
-}
+# Default values
+DOMAIN="example.com"
+SERVER="localhost"
+TIMEOUT=5
+VERBOSE=false
 
 # Function to show help
 show_help() {
     echo "DNS Troubleshooting Script"
     echo ""
-    echo "Usage: $0 [OPTIONS] DOMAIN"
+    echo "Usage: $0 [options]"
     echo ""
     echo "Options:"
-    echo "  -s, --server SERVER    Use specific DNS server"
-    echo "  -t, --trace           Trace DNS resolution path"
-    echo "  -r, --records         Check all record types"
-    echo "  -d, --dnssec          Check DNSSEC support"
-    echo "  -p, --performance N   Run performance test (N iterations)"
-    echo "  -c, --cache           Check DNS cache status"
-    echo "  -f, --flush           Flush DNS cache"
-    echo "  -a, --all             Run all tests"
-    echo "  -h, --help            Show this help"
+    echo "  -d, --domain DOMAIN     Domain to test (default: example.com)"
+    echo "  -s, --server SERVER     DNS server to test (default: localhost)"
+    echo "  -t, --timeout SECONDS   Timeout for queries (default: 5)"
+    echo "  -v, --verbose           Verbose output"
+    echo "  -h, --help              Show this help"
     echo ""
     echo "Examples:"
-    echo "  $0 google.com"
-    echo "  $0 -s 8.8.8.8 google.com"
-    echo "  $0 -t -r google.com"
-    echo "  $0 -a google.com"
+    echo "  $0 -d google.com -s 8.8.8.8"
+    echo "  $0 -d example.com -s localhost -v"
+    echo "  $0 --domain internal.local --server 192.168.1.100"
 }
 
-# Main function
-main() {
-    local domain=""
-    local dns_server=""
-    local trace=false
-    local records=false
-    local dnssec=false
-    local performance=0
-    local cache=false
-    local flush=false
-    local all=false
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -d|--domain)
+            DOMAIN="$2"
+            shift 2
+            ;;
+        -s|--server)
+            SERVER="$2"
+            shift 2
+            ;;
+        -t|--timeout)
+            TIMEOUT="$2"
+            shift 2
+            ;;
+        -v|--verbose)
+            VERBOSE=true
+            shift
+            ;;
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        *)
+            print_error "Unknown option: $1"
+            show_help
+            exit 1
+            ;;
+    esac
+done
+
+# Function to run DNS query
+run_dns_query() {
+    local query_type="$1"
+    local domain="$2"
+    local server="$3"
+    local timeout="$4"
     
-    # Parse arguments
-    while [[ $# -gt 0 ]]; do
-        case $1 in
-            -s|--server)
-                dns_server="$2"
-                shift 2
-                ;;
-            -t|--trace)
-                trace=true
-                shift
-                ;;
-            -r|--records)
-                records=true
-                shift
-                ;;
-            -d|--dnssec)
-                dnssec=true
-                shift
-                ;;
-            -p|--performance)
-                performance="$2"
-                shift 2
-                ;;
-            -c|--cache)
-                cache=true
-                shift
-                ;;
-            -f|--flush)
-                flush=true
-                shift
-                ;;
-            -a|--all)
-                all=true
-                shift
-                ;;
-            -h|--help)
-                show_help
-                exit 0
-                ;;
-            -*)
-                echo "Unknown option: $1"
-                show_help
-                exit 1
-                ;;
-            *)
-                if [ -z "$domain" ]; then
-                    domain="$1"
-                else
-                    echo "Multiple domains specified"
-                    exit 1
-                fi
-                shift
-                ;;
-        esac
+    if command -v dig >/dev/null 2>&1; then
+        dig @"$server" "$domain" "$query_type" +time="$timeout" +short
+    elif command -v nslookup >/dev/null 2>&1; then
+        nslookup -type="$query_type" "$domain" "$server" 2>/dev/null | grep -E "^$domain|^Address:" | tail -1
+    else
+        print_error "Neither dig nor nslookup found"
+        return 1
+    fi
+}
+
+# Function to test DNS server connectivity
+test_server_connectivity() {
+    print_header "Testing DNS Server Connectivity"
+    
+    print_info "Testing server: $SERVER"
+    print_info "Domain: $DOMAIN"
+    print_info "Timeout: $TIMEOUT seconds"
+    echo ""
+    
+    # Test basic connectivity
+    if ping -c 1 -W "$TIMEOUT" "$SERVER" >/dev/null 2>&1; then
+        print_success "Server $SERVER is reachable"
+    else
+        print_error "Server $SERVER is not reachable"
+        return 1
+    fi
+    
+    # Test DNS port
+    if timeout "$TIMEOUT" bash -c "echo > /dev/tcp/$SERVER/53" 2>/dev/null; then
+        print_success "DNS port 53 is open on $SERVER"
+    else
+        print_error "DNS port 53 is not accessible on $SERVER"
+        return 1
+    fi
+}
+
+# Function to test basic DNS resolution
+test_basic_resolution() {
+    print_header "Testing Basic DNS Resolution"
+    
+    # Test A record
+    print_info "Testing A record for $DOMAIN"
+    local a_record
+    a_record=$(run_dns_query "A" "$DOMAIN" "$SERVER" "$TIMEOUT")
+    if [ -n "$a_record" ]; then
+        print_success "A record: $a_record"
+    else
+        print_error "No A record found for $DOMAIN"
+    fi
+    
+    # Test AAAA record
+    print_info "Testing AAAA record for $DOMAIN"
+    local aaaa_record
+    aaaa_record=$(run_dns_query "AAAA" "$DOMAIN" "$SERVER" "$TIMEOUT")
+    if [ -n "$aaaa_record" ]; then
+        print_success "AAAA record: $aaaa_record"
+    else
+        print_warning "No AAAA record found for $DOMAIN"
+    fi
+    
+    # Test MX record
+    print_info "Testing MX record for $DOMAIN"
+    local mx_record
+    mx_record=$(run_dns_query "MX" "$DOMAIN" "$SERVER" "$TIMEOUT")
+    if [ -n "$mx_record" ]; then
+        print_success "MX record: $mx_record"
+    else
+        print_warning "No MX record found for $DOMAIN"
+    fi
+    
+    # Test NS record
+    print_info "Testing NS record for $DOMAIN"
+    local ns_record
+    ns_record=$(run_dns_query "NS" "$DOMAIN" "$SERVER" "$TIMEOUT")
+    if [ -n "$ns_record" ]; then
+        print_success "NS record: $ns_record"
+    else
+        print_warning "No NS record found for $DOMAIN"
+    fi
+}
+
+# Function to test DNS performance
+test_dns_performance() {
+    print_header "Testing DNS Performance"
+    
+    print_info "Running performance test with 10 queries..."
+    
+    local total_time=0
+    local success_count=0
+    
+    for i in {1..10}; do
+        local start_time=$(date +%s.%N)
+        local result
+        result=$(run_dns_query "A" "$DOMAIN" "$SERVER" "$TIMEOUT")
+        local end_time=$(date +%s.%N)
+        
+        if [ -n "$result" ]; then
+            local query_time=$(echo "$end_time - $start_time" | bc -l)
+            total_time=$(echo "$total_time + $query_time" | bc -l)
+            success_count=$((success_count + 1))
+            
+            if [ "$VERBOSE" = true ]; then
+                print_info "Query $i: ${query_time}s - $result"
+            fi
+        else
+            print_warning "Query $i failed"
+        fi
     done
     
-    # Check if domain is provided
-    if [ -z "$domain" ]; then
-        echo "Error: Domain is required"
-        show_help
-        exit 1
-    fi
-    
-    # Check required commands
-    if ! command_exists dig; then
-        print_error "dig command not found. Please install dnsutils package."
-        exit 1
-    fi
-    
-    # Run tests based on options
-    if [ "$all" = true ]; then
-        check_dns_config
-        test_dns_resolution "$domain" "$dns_server"
-        test_dns_servers "$domain"
-        trace_dns "$domain"
-        check_record_types "$domain"
-        check_dnssec "$domain"
-        test_dns_performance "$domain" 5
-        check_dns_cache
+    if [ $success_count -gt 0 ]; then
+        local avg_time=$(echo "scale=3; $total_time / $success_count" | bc -l)
+        print_success "Performance test completed"
+        print_info "Successful queries: $success_count/10"
+        print_info "Average response time: ${avg_time}s"
     else
-        check_dns_config
-        test_dns_resolution "$domain" "$dns_server"
-        
-        if [ "$trace" = true ]; then
-            trace_dns "$domain"
-        fi
-        
-        if [ "$records" = true ]; then
-            check_record_types "$domain"
-        fi
-        
-        if [ "$dnssec" = true ]; then
-            check_dnssec "$domain"
-        fi
-        
-        if [ "$performance" -gt 0 ]; then
-            test_dns_performance "$domain" "$performance"
-        fi
-        
-        if [ "$cache" = true ]; then
-            check_dns_cache
-        fi
-        
-        if [ "$flush" = true ]; then
-            flush_dns_cache
-        fi
+        print_error "All performance test queries failed"
     fi
-    
-    print_success "DNS troubleshooting complete for $domain"
 }
 
-# Run main function with all arguments
-main "$@"
+# Function to test DNS recursion
+test_dns_recursion() {
+    print_header "Testing DNS Recursion"
+    
+    # Test recursive query
+    print_info "Testing recursive query for $DOMAIN"
+    local recursive_result
+    recursive_result=$(run_dns_query "A" "$DOMAIN" "$SERVER" "$TIMEOUT")
+    
+    if [ -n "$recursive_result" ]; then
+        print_success "Recursive query successful: $recursive_result"
+    else
+        print_error "Recursive query failed"
+    fi
+    
+    # Test non-recursive query
+    print_info "Testing non-recursive query for $DOMAIN"
+    if command -v dig >/dev/null 2>&1; then
+        local non_recursive_result
+        non_recursive_result=$(dig @"$SERVER" "$DOMAIN" A +norecurse +time="$TIMEOUT" +short)
+        if [ -n "$non_recursive_result" ]; then
+            print_success "Non-recursive query successful: $non_recursive_result"
+        else
+            print_warning "Non-recursive query returned no results (expected for non-authoritative servers)"
+        fi
+    fi
+}
+
+# Function to test DNS security
+test_dns_security() {
+    print_header "Testing DNS Security"
+    
+    # Test DNSSEC
+    print_info "Testing DNSSEC for $DOMAIN"
+    if command -v dig >/dev/null 2>&1; then
+        local dnssec_result
+        dnssec_result=$(dig @"$SERVER" "$DOMAIN" A +dnssec +time="$TIMEOUT" 2>/dev/null | grep -c "RRSIG")
+        if [ "$dnssec_result" -gt 0 ]; then
+            print_success "DNSSEC is enabled ($dnssec_result signatures found)"
+        else
+            print_warning "DNSSEC is not enabled or not supported"
+        fi
+    fi
+    
+    # Test DNS over TLS
+    print_info "Testing DNS over TLS support"
+    if command -v dig >/dev/null 2>&1; then
+        local dot_result
+        dot_result=$(timeout "$TIMEOUT" dig @"$SERVER" "$DOMAIN" A +tls 2>/dev/null | grep -c "ANSWER:")
+        if [ "$dot_result" -gt 0 ]; then
+            print_success "DNS over TLS is supported"
+        else
+            print_warning "DNS over TLS is not supported or not configured"
+        fi
+    fi
+}
+
+# Function to show DNS server information
+show_dns_info() {
+    print_header "DNS Server Information"
+    
+    print_info "Server: $SERVER"
+    print_info "Domain: $DOMAIN"
+    print_info "Timeout: $TIMEOUT seconds"
+    echo ""
+    
+    # Show server version (if available)
+    if command -v dig >/dev/null 2>&1; then
+        print_info "Server version information:"
+        dig @"$SERVER" version.bind txt chaos +time="$TIMEOUT" 2>/dev/null | grep -E "version.bind|ANSWER:" || print_warning "Version information not available"
+    fi
+    
+    # Show server statistics
+    if command -v dig >/dev/null 2>&1; then
+        print_info "Server statistics:"
+        dig @"$SERVER" hostname.bind txt chaos +time="$TIMEOUT" 2>/dev/null | grep -E "hostname.bind|ANSWER:" || print_warning "Statistics not available"
+    fi
+}
+
+# Function to run comprehensive test
+run_comprehensive_test() {
+    print_header "Comprehensive DNS Troubleshooting"
+    print_info "Testing DNS server: $SERVER"
+    print_info "Domain: $DOMAIN"
+    echo ""
+    
+    # Run all tests
+    test_server_connectivity || return 1
+    echo ""
+    
+    show_dns_info
+    echo ""
+    
+    test_basic_resolution
+    echo ""
+    
+    test_dns_recursion
+    echo ""
+    
+    test_dns_performance
+    echo ""
+    
+    test_dns_security
+    echo ""
+    
+    print_success "Comprehensive DNS test completed"
+}
+
+# Main execution
+main() {
+    print_header "DNS Troubleshooting Tool"
+    
+    # Check if required tools are available
+    if ! command -v dig >/dev/null 2>&1 && ! command -v nslookup >/dev/null 2>&1; then
+        print_error "Neither dig nor nslookup is available"
+        print_info "Please install bind-utils or dnsutils package"
+        exit 1
+    fi
+    
+    # Run comprehensive test
+    run_comprehensive_test
+}
+
+# Run main function
+main
