@@ -67,6 +67,29 @@ class InterfaceAnalyzer:
         self.verbose = verbose
         self.interfaces = {}
         self.routes = []
+        self.is_container = self._detect_container_environment()
+    
+    def _detect_container_environment(self) -> bool:
+        """Detect if running inside a container"""
+        try:
+            # Check for common container indicators
+            with open('/proc/1/cgroup', 'r') as f:
+                content = f.read()
+                if 'docker' in content or 'containerd' in content:
+                    return True
+            
+            # Check for .dockerenv file
+            if Path('/.dockerenv').exists():
+                return True
+            
+            # Check environment variables
+            import os
+            if os.environ.get('container') or os.environ.get('DOCKER_CONTAINER'):
+                return True
+            
+            return False
+        except Exception:
+            return False
         
     def run_command(self, command: List[str], capture_output: bool = True) -> Tuple[int, str, str]:
         """Run a command and return exit code, stdout, stderr"""
@@ -85,71 +108,101 @@ class InterfaceAnalyzer:
     
     def get_interface_list(self) -> List[str]:
         """Get list of network interfaces"""
+        # Try ip command first (Linux)
         exit_code, stdout, stderr = self.run_command(['ip', 'link', 'show'])
-        if exit_code != 0:
-            # Fallback to ifconfig on macOS
-            exit_code, stdout, stderr = self.run_command(['ifconfig', '-a'])
-            if exit_code != 0:
-                print(f"❌ Error getting interface list: {stderr}")
-                return []
-        
-        interfaces = []
-        if 'ip' in ' '.join(['ip', 'link', 'show']):
+        if exit_code == 0:
             # Parse ip command output
+            interfaces = []
             for line in stdout.split('\n'):
-                if ':' in line and 'state' in line:
+                if ':' in line and ('state' in line or 'mtu' in line):
                     match = re.search(r'(\d+):\s+([^:]+):', line)
                     if match:
                         interface_name = match.group(2)
                         # Filter out Docker internal interfaces and virtual interfaces
                         if self._should_analyze_interface(interface_name):
                             interfaces.append(interface_name)
-        else:
-            # Parse ifconfig output
-            for line in stdout.split('\n'):
-                if line and not line.startswith(' ') and ':' in line:
+            return interfaces
+        
+        # Fallback to ifconfig (macOS, older Linux)
+        exit_code, stdout, stderr = self.run_command(['ifconfig', '-a'])
+        if exit_code != 0:
+            print(f"❌ Error getting interface list: {stderr}")
+            return []
+        
+        # Parse ifconfig output
+        interfaces = []
+        for line in stdout.split('\n'):
+            if line and not line.startswith('\t') and not line.startswith(' '):
+                # Look for interface name (first word before colon or space)
+                if ':' in line:
                     interface = line.split(':')[0]
-                    if interface not in interfaces and self._should_analyze_interface(interface):
-                        interfaces.append(interface)
+                elif ' ' in line:
+                    interface = line.split()[0]
+                else:
+                    continue
+                
+                if interface and self._should_analyze_interface(interface):
+                    interfaces.append(interface)
         
         return interfaces
     
     def _should_analyze_interface(self, interface_name: str) -> bool:
         """Determine if an interface should be analyzed"""
-        # Skip Docker internal interfaces (contain @)
-        if '@' in interface_name:
-            return False
-        
-        # Skip virtual tunnel interfaces that are typically not useful for analysis
-        virtual_interfaces = [
-            'tunl0', 'gre0', 'gretap0', 'erspan0', 'ip_vti0', 'ip6_vti0',
-            'sit0', 'ip6tnl0', 'ip6gre0', 'tun0', 'tap0'
-        ]
-        
-        # Skip if it's a known virtual interface
-        if interface_name in virtual_interfaces:
-            return False
-        
-        # Skip interfaces that start with virtual prefixes
-        virtual_prefixes = ['veth', 'docker', 'br-', 'virbr']
-        for prefix in virtual_prefixes:
-            if interface_name.startswith(prefix):
+        if self.is_container:
+            # In container: strict filtering for Docker environments
+            # Skip Docker internal interfaces (contain @)
+            if '@' in interface_name:
+                return False
+            
+            # Skip virtual tunnel interfaces that are typically not useful for analysis
+            virtual_interfaces = [
+                'tunl0', 'gre0', 'gretap0', 'erspan0', 'ip_vti0', 'ip6_vti0',
+                'sit0', 'ip6tnl0', 'ip6gre0', 'tun0', 'tap0'
+            ]
+            
+            # Skip if it's a known virtual interface
+            if interface_name in virtual_interfaces:
+                return False
+            
+            # Skip interfaces that start with virtual prefixes
+            virtual_prefixes = ['veth', 'docker', 'br-', 'virbr']
+            for prefix in virtual_prefixes:
+                if interface_name.startswith(prefix):
+                    return False
+        else:
+            # On host system: more permissive filtering
+            # Skip only obvious virtual interfaces that aren't useful for learning
+            virtual_interfaces = [
+                'tunl0', 'gre0', 'gretap0', 'erspan0', 'ip_vti0', 'ip6_vti0',
+                'sit0', 'ip6tnl0', 'ip6gre0'
+            ]
+            
+            if interface_name in virtual_interfaces:
+                return False
+            
+            # Skip Docker bridge interfaces on host
+            if interface_name.startswith('br-') and 'docker' in interface_name:
                 return False
         
-        # Include loopback, ethernet, and wireless interfaces
+        # Include loopback, ethernet, wireless, and useful virtual interfaces
         return True
     
     def get_interface_info(self, interface: str) -> Optional[InterfaceInfo]:
         """Get detailed information about a specific interface"""
-        # Get basic interface info
+        # Try ip command first (Linux)
         exit_code, stdout, stderr = self.run_command(['ip', 'link', 'show', interface])
-        if exit_code != 0:
-            # Fallback to ifconfig
-            exit_code, stdout, stderr = self.run_command(['ifconfig', interface])
-            if exit_code != 0:
-                return None
+        if exit_code == 0:
+            return self._parse_ip_output(interface, stdout)
         
-        # Parse interface information
+        # Fallback to ifconfig (macOS, older Linux)
+        exit_code, stdout, stderr = self.run_command(['ifconfig', interface])
+        if exit_code != 0:
+            return None
+        
+        return self._parse_ifconfig_output(interface, stdout)
+    
+    def _parse_ip_output(self, interface: str, stdout: str) -> Optional[InterfaceInfo]:
+        """Parse ip command output"""
         state = "UNKNOWN"
         mtu = 1500
         mac_address = ""
@@ -157,46 +210,78 @@ class InterfaceAnalyzer:
         is_loopback = interface.startswith('lo')
         is_wireless = any(x in interface.lower() for x in ['wlan', 'wifi', 'wireless'])
         
-        if 'ip' in ' '.join(['ip', 'link', 'show', interface]):
-            # Parse ip command output
-            for line in stdout.split('\n'):
-                if 'state' in line:
-                    if 'UP' in line:
-                        state = "UP"
-                        is_up = True
-                    elif 'DOWN' in line:
-                        state = "DOWN"
-                        is_up = False
-                
-                if 'mtu' in line:
-                    match = re.search(r'mtu (\d+)', line)
-                    if match:
-                        mtu = int(match.group(1))
-                
-                if 'link/ether' in line:
-                    match = re.search(r'link/ether ([a-f0-9:]+)', line)
-                    if match:
-                        mac_address = match.group(1)
-        else:
-            # Parse ifconfig output
-            for line in stdout.split('\n'):
-                if 'status:' in line:
-                    if 'active' in line:
-                        state = "UP"
-                        is_up = True
-                    else:
-                        state = "DOWN"
-                        is_up = False
-                
-                if 'mtu' in line:
-                    match = re.search(r'mtu (\d+)', line)
-                    if match:
-                        mtu = int(match.group(1))
-                
-                if 'ether' in line:
-                    match = re.search(r'ether ([a-f0-9:]+)', line)
-                    if match:
-                        mac_address = match.group(1)
+        for line in stdout.split('\n'):
+            if 'state' in line:
+                if 'UP' in line:
+                    state = "UP"
+                    is_up = True
+                elif 'DOWN' in line:
+                    state = "DOWN"
+                    is_up = False
+            elif 'status' in line:
+                # macOS ip command format
+                if 'UP' in line:
+                    state = "UP"
+                    is_up = True
+                elif 'DOWN' in line:
+                    state = "DOWN"
+                    is_up = False
+            
+            if 'mtu' in line:
+                match = re.search(r'mtu (\d+)', line)
+                if match:
+                    mtu = int(match.group(1))
+            
+            if 'link/ether' in line:
+                match = re.search(r'link/ether ([a-f0-9:]+)', line)
+                if match:
+                    mac_address = match.group(1)
+        
+        # Get IP addresses
+        ip_addresses = self.get_interface_ip_addresses(interface)
+        
+        # Get interface statistics
+        errors = self.get_interface_errors(interface)
+        
+        return InterfaceInfo(
+            name=interface,
+            state=state,
+            mtu=mtu,
+            mac_address=mac_address,
+            ip_addresses=ip_addresses,
+            is_up=is_up,
+            is_loopback=is_loopback,
+            is_wireless=is_wireless,
+            errors=errors
+        )
+    
+    def _parse_ifconfig_output(self, interface: str, stdout: str) -> Optional[InterfaceInfo]:
+        """Parse ifconfig command output"""
+        state = "UNKNOWN"
+        mtu = 1500
+        mac_address = ""
+        is_up = False
+        is_loopback = interface.startswith('lo')
+        is_wireless = any(x in interface.lower() for x in ['wlan', 'wifi', 'wireless'])
+        
+        for line in stdout.split('\n'):
+            if 'status:' in line:
+                if 'active' in line:
+                    state = "UP"
+                    is_up = True
+                else:
+                    state = "DOWN"
+                    is_up = False
+            
+            if 'mtu' in line:
+                match = re.search(r'mtu (\d+)', line)
+                if match:
+                    mtu = int(match.group(1))
+            
+            if 'ether' in line:
+                match = re.search(r'ether ([a-f0-9:]+)', line)
+                if match:
+                    mac_address = match.group(1)
         
         # Get IP addresses
         ip_addresses = self.get_interface_ip_addresses(interface)
@@ -218,28 +303,30 @@ class InterfaceAnalyzer:
     
     def get_interface_ip_addresses(self, interface: str) -> List[str]:
         """Get IP addresses assigned to an interface"""
+        # Try ip command first (Linux)
         exit_code, stdout, stderr = self.run_command(['ip', 'addr', 'show', interface])
-        if exit_code != 0:
-            # Fallback to ifconfig
-            exit_code, stdout, stderr = self.run_command(['ifconfig', interface])
-            if exit_code != 0:
-                return []
-        
-        ip_addresses = []
-        if 'ip' in ' '.join(['ip', 'addr', 'show', interface]):
+        if exit_code == 0:
             # Parse ip command output
+            ip_addresses = []
             for line in stdout.split('\n'):
                 if 'inet ' in line:
                     match = re.search(r'inet (\d+\.\d+\.\d+\.\d+/\d+)', line)
                     if match:
                         ip_addresses.append(match.group(1))
-        else:
-            # Parse ifconfig output
-            for line in stdout.split('\n'):
-                if 'inet ' in line:
-                    match = re.search(r'inet (\d+\.\d+\.\d+\.\d+)', line)
-                    if match:
-                        ip_addresses.append(match.group(1))
+            return ip_addresses
+        
+        # Fallback to ifconfig (macOS, older Linux)
+        exit_code, stdout, stderr = self.run_command(['ifconfig', interface])
+        if exit_code != 0:
+            return []
+        
+        # Parse ifconfig output
+        ip_addresses = []
+        for line in stdout.split('\n'):
+            if 'inet ' in line:
+                match = re.search(r'inet (\d+\.\d+\.\d+\.\d+)', line)
+                if match:
+                    ip_addresses.append(match.group(1))
         
         return ip_addresses
     
@@ -394,6 +481,12 @@ class InterfaceAnalyzer:
         print("🔍 Analyzing all network interfaces")
         print("=" * 50)
         
+        # Show environment context
+        if self.is_container:
+            print("🐳 Running in container environment")
+        else:
+            print("🖥️  Running on host system")
+        
         interfaces = self.get_interface_list()
         if not interfaces:
             print("❌ No network interfaces found")
@@ -401,7 +494,10 @@ class InterfaceAnalyzer:
         
         print(f"📡 Found {len(interfaces)} analyzable interfaces: {', '.join(interfaces)}")
         if self.verbose:
-            print("ℹ️  Note: Docker internal interfaces and virtual tunnels are filtered out")
+            if self.is_container:
+                print("ℹ️  Note: Docker internal interfaces and virtual tunnels are filtered out")
+            else:
+                print("ℹ️  Note: Only useful interfaces are shown (virtual tunnels filtered)")
         
         for interface in interfaces:
             self.analyze_interface(interface)
@@ -448,6 +544,13 @@ class InterfaceAnalyzer:
         """Run the complete analysis"""
         print("🚀 Network Interface Analyzer")
         print("=" * 50)
+        
+        # Show environment detection
+        if self.verbose:
+            if self.is_container:
+                print("🐳 Container environment detected")
+            else:
+                print("🖥️  Host system environment detected")
         
         if interface:
             self.analyze_interface(interface)
