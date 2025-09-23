@@ -583,16 +583,29 @@ class InterfaceAnalyzer:
         
         info = self.get_interface_info(interface)
         if not info:
-            print(f"❌ Could not get information for interface {interface}")
-            if self.verbose:
-                print(f"   This may be a virtual or Docker internal interface")
-            
-            # Show educational information even for interfaces that can't be analyzed
+            # Determine if this is a known educational interface
             clean_name = interface.split('@')[0]
             interface_type = self._get_interface_type(interface)
+            
+            if interface_type in ['IP-in-IP Tunnel', 'GRE Tunnel', 'GRE TAP Interface', 'IPv6-over-IPv4 Tunnel', 'IPv4 VTI Tunnel', 'IPv6 VTI Tunnel', 'IPv6 Tunnel', 'IPv6 GRE Tunnel', 'ERSPAN Tunnel']:
+                print(f"📡 Interface: {interface} ({interface_type})")
+                print(f"🔌 State: DOWN (requires configuration)")
+            elif '@if' in interface and interface_type == 'Ethernet':
+                print(f"📡 Interface: {interface} (Docker Internal)")
+                print(f"🔌 State: Active (Docker managed)")
+            else:
+                print(f"❌ Could not get information for interface {interface}")
+                if self.verbose:
+                    print(f"   This may be a virtual or Docker internal interface")
+            
+            # Show educational information
             if interface_type in ['IP-in-IP Tunnel', 'GRE Tunnel', 'GRE TAP Interface', 'IPv6-over-IPv4 Tunnel', 'IPv4 VTI Tunnel', 'IPv6 VTI Tunnel', 'IPv6 Tunnel', 'IPv6 GRE Tunnel', 'ERSPAN Tunnel']:
                 print(f"💡 Educational: {self._get_interface_description(interface)}")
                 print(f"📝 Note: This interface is in DOWN state and requires configuration to be active")
+            elif '@if' in interface and interface_type == 'Ethernet':
+                print(f"💡 Educational: Docker internal network interface")
+                print(f"📝 Note: This is Docker's internal networking - connects container to host network")
+                print(f"🔗 Purpose: Provides network connectivity between container and Docker bridge")
             return
         
         # Basic information
