@@ -44,6 +44,18 @@ networking/
 
 ## 🚀 Quick Start
 
+### One-Command Installation
+**Cross-platform installation script:**
+
+```bash
+# Clone the repository
+git clone https://github.com/your-username/networking-learning.git
+cd networking-learning
+
+# Run automated installation
+./install.sh
+```
+
 ### Containerized Practice (Recommended)
 **Perfect for safe learning during meetings or training sessions!**
 
@@ -63,6 +75,7 @@ networking/
 - ✅ **Meeting-Safe**: Learn during Zoom sessions without risk
 - ✅ **Easy Reset**: Just restart containers to clean state
 - ✅ **Full Tools**: All networking tools pre-installed
+- ✅ **Cross-Platform**: Works on macOS, Linux, and Windows
 
 ### Local Development Setup
 **For development and local testing:**
@@ -76,9 +89,56 @@ pip3 install -r requirements.txt
 ```
 
 **System Requirements:**
-- Python 3.8+ with pip
-- Common networking tools (curl, wget, ping, etc.)
-- See `CONTAINER_REQUIREMENTS.md` for full details
+- **Python**: 3.8+ with pip
+- **Memory**: 2GB RAM (4GB recommended)
+- **Storage**: 1GB free space
+- **Network**: Internet connection for package downloads
+- **Platform**: macOS 10.15+, Linux (Ubuntu 20.04+), Windows 10+ (WSL2)
+
+### Platform-Specific Installation
+
+#### macOS
+```bash
+# Install Homebrew (if not installed)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Install dependencies
+brew install python3 docker docker-compose wireshark tcpdump nmap
+
+# Clone and setup
+git clone https://github.com/your-username/networking-learning.git
+cd networking-learning
+./install.sh
+```
+
+#### Linux (Ubuntu/Debian)
+```bash
+# Install dependencies
+sudo apt update
+sudo apt install -y python3 python3-pip docker.io docker-compose
+
+# Clone and setup
+git clone https://github.com/your-username/networking-learning.git
+cd networking-learning
+./install.sh
+```
+
+#### Windows (WSL2)
+```bash
+# Install WSL2
+wsl --install
+
+# In WSL2 Ubuntu terminal:
+sudo apt update
+sudo apt install -y python3 python3-pip docker.io docker-compose
+
+# Clone and setup
+git clone https://github.com/your-username/networking-learning.git
+cd networking-learning
+./install.sh
+```
+
+**See `INSTALLATION.md` for detailed installation instructions.**
 
 ## Learning Path
 

@@ -1,0 +1,82 @@
+{
+  "name": "networking-learning-project",
+  "version": "1.0.0",
+  "description": "A comprehensive hands-on project for learning computer networking concepts through practical exercises and simulations",
+  "main": "README.md",
+  "scripts": {
+    "install": "./install.sh",
+    "setup": "./setup.sh",
+    "start": "./container-practice.sh start",
+    "enter": "./container-practice.sh enter",
+    "test": "./container-practice.sh test",
+    "clean": "docker-compose down && docker system prune -f"
+  },
+  "keywords": [
+    "networking",
+    "education",
+    "learning",
+    "docker",
+    "python",
+    "tcp-ip",
+    "osi-model",
+    "network-analysis",
+    "container-networking"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/networking-learning.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/networking-learning/issues"
+  },
+  "homepage": "https://github.com/your-username/networking-learning#readme",
+  "engines": {
+    "python": ">=3.8",
+    "node": ">=14.0.0"
+  },
+  "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "dependencies": {
+    "python": ">=3.8",
+    "docker": ">=20.0.0",
+    "docker-compose": ">=2.0.0"
+  },
+  "devDependencies": {
+    "pytest": ">=7.4.0",
+    "black": ">=23.7.0",
+    "flake8": ">=6.0.0"
+  },
+  "files": [
+    "README.md",
+    "INSTALLATION.md",
+    "requirements.txt",
+    "docker-compose.yml",
+    "install.sh",
+    "setup.sh",
+    "container-practice.sh",
+    "scripts/",
+    "01-basics/",
+    "02-protocols/",
+    "03-docker-networks/",
+    "04-network-analysis/",
+    "05-security/",
+    "06-advanced/",
+    "admin/"
+  ],
+  "directories": {
+    "lib": "scripts/",
+    "bin": "scripts/",
+    "doc": "admin/",
+    "test": "tests/"
+  },
+  "config": {
+    "python_path": "python3",
+    "pip_path": "pip3",
+    "docker_compose_file": "docker-compose.yml"
+  }
+}
