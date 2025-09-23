@@ -333,6 +333,8 @@ class InterfaceAnalyzer:
     def get_interface_errors(self, interface: str) -> Dict[str, int]:
         """Get interface error statistics"""
         errors = {}
+        
+        # Try Linux /proc/net/dev first
         try:
             with open(f'/proc/net/dev', 'r') as f:
                 for line in f:
@@ -350,9 +352,88 @@ class InterfaceAnalyzer:
                                 'tx_dropped': int(parts[12])
                             }
                         break
+        except FileNotFoundError:
+            # /proc/net/dev doesn't exist (macOS, etc.)
+            # Try to get statistics from ifconfig or netstat
+            errors = self._get_interface_stats_alternative(interface)
         except Exception as e:
             if self.verbose:
                 print(f"⚠️  Could not read interface statistics: {e}")
+        
+        return errors
+    
+    def _get_interface_stats_alternative(self, interface: str) -> Dict[str, int]:
+        """Get interface statistics using alternative methods (macOS, etc.)"""
+        errors = {}
+        
+        try:
+            # Try netstat for interface statistics (works on macOS)
+            exit_code, stdout, stderr = self.run_command(['netstat', '-i'])
+            if exit_code == 0:
+                # Parse netstat output for statistics
+                lines = stdout.split('\n')
+                for line in lines:
+                    if interface in line and not line.startswith('Name') and '<Link#' in line:
+                        parts = line.split()
+                        if len(parts) >= 9:
+                            try:
+                                errors = {
+                                    'rx_bytes': 0,  # netstat doesn't show bytes
+                                    'rx_packets': int(parts[4]) if parts[4].isdigit() else 0,  # Ipkts
+                                    'rx_errors': int(parts[5]) if parts[5].isdigit() else 0,   # Ierrs
+                                    'rx_dropped': 0,  # netstat doesn't show dropped
+                                    'tx_bytes': 0,  # netstat doesn't show bytes
+                                    'tx_packets': int(parts[6]) if parts[6].isdigit() else 0,  # Opkts
+                                    'tx_errors': int(parts[7]) if parts[7].isdigit() else 0,   # Oerrs
+                                    'tx_dropped': 0   # netstat doesn't show dropped
+                                }
+                                break
+                            except (ValueError, IndexError):
+                                pass
+            
+            # If netstat didn't work, try ifconfig with verbose output
+            if not errors:
+                exit_code, stdout, stderr = self.run_command(['ifconfig', interface])
+                if exit_code == 0:
+                    # Parse ifconfig output for statistics
+                    for line in stdout.split('\n'):
+                        if 'packets:' in line.lower():
+                            # Look for packet statistics
+                            parts = line.split()
+                            for i, part in enumerate(parts):
+                                if 'packets:' in part.lower():
+                                    if i + 1 < len(parts):
+                                        try:
+                                            packets = int(parts[i + 1])
+                                            if 'rx' in line.lower() or 'input' in line.lower():
+                                                errors['rx_packets'] = packets
+                                            elif 'tx' in line.lower() or 'output' in line.lower():
+                                                errors['tx_packets'] = packets
+                                        except ValueError:
+                                            pass
+                                elif 'bytes:' in part.lower():
+                                    if i + 1 < len(parts):
+                                        try:
+                                            bytes_val = int(parts[i + 1])
+                                            if 'rx' in line.lower() or 'input' in line.lower():
+                                                errors['rx_bytes'] = bytes_val
+                                            elif 'tx' in line.lower() or 'output' in line.lower():
+                                                errors['tx_bytes'] = bytes_val
+                                        except ValueError:
+                                            pass
+                                elif 'errors:' in part.lower():
+                                    if i + 1 < len(parts):
+                                        try:
+                                            error_count = int(parts[i + 1])
+                                            if 'rx' in line.lower() or 'input' in line.lower():
+                                                errors['rx_errors'] = error_count
+                                            elif 'tx' in line.lower() or 'output' in line.lower():
+                                                errors['tx_errors'] = error_count
+                                        except ValueError:
+                                            pass
+        except Exception as e:
+            if self.verbose:
+                print(f"⚠️  Could not get alternative interface statistics: {e}")
         
         return errors
     
