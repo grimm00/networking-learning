@@ -8,7 +8,6 @@ states, IP addresses, routing, and network statistics.
 
 Version: 1.0.0
 License: MIT
-"""
 
 Usage:
     python3 interface-analyzer.py [options]

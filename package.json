@@ -72,12 +72,10 @@
   },
   "files": [
     "README.md",
-    "INSTALLATION.md",
     "requirements.txt",
     "docker-compose.yml",
-    "install.sh",
-    "setup.sh",
-    "container-practice.sh",
+    "bin/",
+    "docs/",
     "scripts/",
     "01-basics/",
     "02-protocols/",
@@ -85,7 +83,8 @@
     "04-network-analysis/",
     "05-security/",
     "06-advanced/",
-    "admin/"
+    "admin/",
+    "tools/"
   ],
   "directories": {
     "lib": "scripts/",
