@@ -149,22 +149,26 @@ class InterfaceAnalyzer:
     def _should_analyze_interface(self, interface_name: str) -> bool:
         """Determine if an interface should be analyzed"""
         if self.is_container:
-            # In container: strict filtering for Docker environments
-            # Skip Docker internal interfaces (contain @)
-            if '@' in interface_name:
+            # In container: educational filtering - show more interfaces for learning
+            # Skip Docker internal interfaces (contain @if followed by numbers)
+            if '@if' in interface_name and interface_name.split('@')[1].isdigit():
                 return False
             
-            # Skip virtual tunnel interfaces that are typically not useful for analysis
-            virtual_interfaces = [
-                'tunl0', 'gre0', 'gretap0', 'erspan0', 'ip_vti0', 'ip6_vti0',
-                'sit0', 'ip6tnl0', 'ip6gre0', 'tun0', 'tap0'
+            # Include educational virtual interfaces
+            educational_interfaces = [
+                'tunl0',    # IP-in-IP tunnel
+                'gre0',     # Generic Routing Encapsulation
+                'gretap0',  # GRE TAP interface
+                'sit0',     # Simple Internet Transition (IPv6 over IPv4)
+                'tun0',     # TUN interface
+                'tap0'      # TAP interface
             ]
             
-            # Skip if it's a known virtual interface
-            if interface_name in virtual_interfaces:
-                return False
+            # Include educational interfaces
+            if interface_name in educational_interfaces:
+                return True
             
-            # Skip interfaces that start with virtual prefixes
+            # Skip interfaces that start with virtual prefixes (except educational ones)
             virtual_prefixes = ['veth', 'docker', 'br-', 'virbr']
             for prefix in virtual_prefixes:
                 if interface_name.startswith(prefix):
@@ -186,6 +190,66 @@ class InterfaceAnalyzer:
         
         # Include loopback, ethernet, wireless, and useful virtual interfaces
         return True
+    
+    def _get_interface_type(self, interface_name: str) -> str:
+        """Get educational interface type description"""
+        # Clean interface name (remove @suffix)
+        clean_name = interface_name.split('@')[0]
+        
+        if clean_name.startswith('lo'):
+            return 'Loopback'
+        elif clean_name.startswith('eth') or clean_name.startswith('en'):
+            return 'Ethernet'
+        elif clean_name.startswith('wlan') or clean_name.startswith('wl'):
+            return 'Wireless'
+        elif clean_name == 'tunl0':
+            return 'IP-in-IP Tunnel'
+        elif clean_name == 'gre0':
+            return 'GRE Tunnel'
+        elif clean_name == 'gretap0':
+            return 'GRE TAP Interface'
+        elif clean_name == 'sit0':
+            return 'IPv6-over-IPv4 Tunnel'
+        elif clean_name.startswith('tun'):
+            return 'TUN Interface'
+        elif clean_name.startswith('tap'):
+            return 'TAP Interface'
+        elif clean_name.startswith('br'):
+            return 'Bridge Interface'
+        elif clean_name.startswith('bond'):
+            return 'Bond Interface'
+        elif clean_name.startswith('ip_vti'):
+            return 'IPv4 VTI Tunnel'
+        elif clean_name.startswith('ip6_vti'):
+            return 'IPv6 VTI Tunnel'
+        elif clean_name.startswith('ip6tnl'):
+            return 'IPv6 Tunnel'
+        elif clean_name.startswith('ip6gre'):
+            return 'IPv6 GRE Tunnel'
+        elif clean_name.startswith('erspan'):
+            return 'ERSPAN Tunnel'
+        else:
+            return 'Network Interface'
+    
+    def _get_interface_description(self, interface_name: str) -> str:
+        """Get educational description for virtual interfaces"""
+        # Clean interface name (remove @suffix)
+        clean_name = interface_name.split('@')[0]
+        
+        descriptions = {
+            'tunl0': 'Used for IP-in-IP tunneling, encapsulates IPv4 packets in IPv4',
+            'gre0': 'Generic Routing Encapsulation tunnel for point-to-point connections',
+            'gretap0': 'GRE TAP interface for layer 2 tunneling over GRE',
+            'sit0': 'Simple Internet Transition for IPv6 over IPv4 tunneling',
+            'tun0': 'TUN interface for user-space network applications',
+            'tap0': 'TAP interface for bridging virtual machines',
+            'ip_vti0': 'IPv4 Virtual Tunnel Interface for IPsec VPNs',
+            'ip6_vti0': 'IPv6 Virtual Tunnel Interface for IPsec VPNs',
+            'ip6tnl0': 'IPv6 tunnel interface for IPv6 over IPv4',
+            'ip6gre0': 'IPv6 GRE tunnel for IPv6 over IPv4',
+            'erspan0': 'ERSPAN tunnel for network monitoring and analysis'
+        }
+        return descriptions.get(clean_name, 'Virtual network interface for advanced networking')
     
     def get_interface_info(self, interface: str) -> Optional[InterfaceInfo]:
         """Get detailed information about a specific interface"""
@@ -522,6 +586,13 @@ class InterfaceAnalyzer:
             print(f"❌ Could not get information for interface {interface}")
             if self.verbose:
                 print(f"   This may be a virtual or Docker internal interface")
+            
+            # Show educational information even for interfaces that can't be analyzed
+            clean_name = interface.split('@')[0]
+            interface_type = self._get_interface_type(interface)
+            if interface_type in ['IP-in-IP Tunnel', 'GRE Tunnel', 'GRE TAP Interface', 'IPv6-over-IPv4 Tunnel', 'IPv4 VTI Tunnel', 'IPv6 VTI Tunnel', 'IPv6 Tunnel', 'IPv6 GRE Tunnel', 'ERSPAN Tunnel']:
+                print(f"💡 Educational: {self._get_interface_description(interface)}")
+                print(f"📝 Note: This interface is in DOWN state and requires configuration to be active")
             return
         
         # Basic information
@@ -529,7 +600,14 @@ class InterfaceAnalyzer:
         print(f"🔌 State: {info.state}")
         print(f"📏 MTU: {info.mtu}")
         print(f"🔗 MAC Address: {info.mac_address}")
-        print(f"🌐 Type: {'Loopback' if info.is_loopback else 'Wireless' if info.is_wireless else 'Wired'}")
+        
+        # Enhanced type description
+        interface_type = self._get_interface_type(info.name)
+        print(f"🌐 Type: {interface_type}")
+        
+        # Add educational context for virtual interfaces
+        if self.is_container and interface_type in ['IP-in-IP Tunnel', 'GRE Tunnel', 'GRE TAP Interface', 'IPv6-over-IPv4 Tunnel']:
+            print(f"💡 Educational: {self._get_interface_description(info.name)}")
         
         # IP addresses
         if info.ip_addresses:
@@ -677,6 +755,12 @@ def main():
     )
     
     parser.add_argument(
+        '-l', '--list',
+        action='store_true',
+        help='List all available interfaces'
+    )
+    
+    parser.add_argument(
         '-s', '--statistics',
         action='store_true',
         help='Show detailed statistics'
@@ -707,13 +791,46 @@ def main():
     
     # Run analysis
     try:
-        analyzer.run_analysis(
-            interface=args.interface,
-            show_routing=args.routing,
-            show_statistics=args.statistics,
-            test_connectivity=args.test
-        )
-        print("\n✅ Analysis completed successfully")
+        if args.list:
+            # List all available interfaces
+            print("📋 Available Network Interfaces")
+            print("=" * 50)
+            
+            # Show environment context
+            if analyzer.is_container:
+                print("🐳 Running in container environment")
+            else:
+                print("🖥️  Running on host system")
+            
+            all_interfaces = analyzer.get_interface_list()
+            analyzable_interfaces = [iface for iface in all_interfaces if analyzer._should_analyze_interface(iface)]
+            
+            print(f"\n📡 All interfaces found: {len(all_interfaces)}")
+            for iface in all_interfaces:
+                status = "✅ Analyzable" if analyzer._should_analyze_interface(iface) else "⏭️  Filtered"
+                interface_type = analyzer._get_interface_type(iface)
+                print(f"   • {iface} ({interface_type}) - {status}")
+            
+            print(f"\n🎯 Analyzable interfaces: {len(analyzable_interfaces)}")
+            for iface in analyzable_interfaces:
+                interface_type = analyzer._get_interface_type(iface)
+                print(f"   • {iface} ({interface_type})")
+            
+            if analyzer.is_container:
+                print(f"\n💡 Educational interfaces available:")
+                educational = ['tunl0', 'gre0', 'gretap0', 'sit0', 'tun0', 'tap0']
+                for iface in educational:
+                    if iface in all_interfaces:
+                        desc = analyzer._get_interface_description(iface)
+                        print(f"   • {iface}: {desc}")
+        else:
+            analyzer.run_analysis(
+                interface=args.interface,
+                show_routing=args.routing,
+                show_statistics=args.statistics,
+                test_connectivity=args.test
+            )
+            print("\n✅ Analysis completed successfully")
     except KeyboardInterrupt:
         print("\n⏹️  Analysis interrupted by user")
         sys.exit(1)
