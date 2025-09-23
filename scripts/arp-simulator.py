@@ -126,8 +126,8 @@ class ARPSimulator:
             return False
         
         try:
-            # Create ARP request packet
-            arp_request = ARP(
+            # Create ARP request packet with Ethernet layer
+            arp_request = Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(
                 op=1,  # ARP request
                 psrc=source_ip,
                 pdst=target_ip,
@@ -135,7 +135,7 @@ class ARPSimulator:
             )
             
             # Send packet
-            send(arp_request, iface=self.interface, verbose=0)
+            sendp(arp_request, iface=self.interface, verbose=0)
             self.log(f"Sent ARP request: Who has {target_ip}? Tell {source_ip}")
             return True
             
@@ -155,8 +155,8 @@ class ARPSimulator:
             return False
         
         try:
-            # Create ARP reply packet
-            arp_reply = ARP(
+            # Create ARP reply packet with Ethernet layer
+            arp_reply = Ether(dst=target_mac) / ARP(
                 op=2,  # ARP reply
                 psrc=source_ip,
                 pdst=target_ip,
@@ -165,7 +165,7 @@ class ARPSimulator:
             )
             
             # Send packet
-            send(arp_reply, iface=self.interface, verbose=0)
+            sendp(arp_reply, iface=self.interface, verbose=0)
             self.log(f"Sent ARP reply: {source_ip} is at {source_mac}")
             return True
             
@@ -183,8 +183,8 @@ class ARPSimulator:
             return False
         
         try:
-            # Create gratuitous ARP
-            garp = ARP(
+            # Create gratuitous ARP with Ethernet layer
+            garp = Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(
                 op=2,  # ARP reply
                 psrc=ip_address,
                 pdst=ip_address,
@@ -193,7 +193,7 @@ class ARPSimulator:
             )
             
             # Send packet
-            send(garp, iface=self.interface, verbose=0)
+            sendp(garp, iface=self.interface, verbose=0)
             self.log(f"Sent gratuitous ARP: {ip_address} is at {mac_address}")
             return True
             
@@ -203,6 +203,10 @@ class ARPSimulator:
     
     def simulate_discovery(self, target_ip, count=1):
         """Simulate ARP discovery scenario"""
+        if not target_ip:
+            print("❌ Target IP is required for ARP discovery")
+            return
+        
         print(f"🔍 Simulating ARP discovery for {target_ip}")
         
         for i in range(count):
@@ -325,7 +329,10 @@ class ARPSimulator:
             self.simulate_discovery(target, count)
         
         elif scenario == "announcement":
-            ip = kwargs.get('target', self.get_my_ip())
+            ip = kwargs.get('target') or self.get_my_ip()
+            if not ip:
+                print("❌ Could not determine IP address for announcement")
+                return False
             count = kwargs.get('count', 1)
             self.simulate_announcement(ip, count)
         
