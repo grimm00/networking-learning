@@ -6,15 +6,47 @@ A comprehensive hands-on project for learning computer networking concepts throu
 
 ```
 networking/
-├── README.md                           # This file
+├── README.md                          # This file
+├── package.json                       # Project metadata
+├── requirements.txt                    # Python dependencies
+├── docker-compose.yml                  # Docker services for network simulation
+├── bin/                               # Executable scripts
+│   ├── install.sh                     # Cross-platform installation
+│   ├── setup.sh                       # Local development setup
+│   ├── container-practice.sh          # Containerized practice script
+│   ├── test-installation.sh           # Installation testing
+│   └── version.sh                     # Version management
+├── docs/                              # Documentation
+│   ├── legal/                         # Legal and licensing
+│   │   ├── LICENSE                    # MIT License
+│   │   ├── VERSION                    # Version file
+│   │   ├── CHANGELOG.md               # Release history
+│   │   └── CONTRIBUTING.md            # Contribution guidelines
+│   └── guides/                        # User guides
+│       ├── INSTALLATION.md             # Detailed installation guide
+│       ├── CONTAINER_REQUIREMENTS.md   # Container requirements
+│       ├── CONTAINER_PRACTICE.md       # Container practice guide
+│       ├── COURSE_SYLLABUS.md          # Course syllabus
+│       └── LEARNING_PATH.md            # Learning path guide
+├── scripts/                           # Python and shell scripts
+│   ├── interface-analyzer.py          # Network interface analysis
+│   ├── dns-analyzer.py                # DNS analysis tool
+│   ├── http-analyzer.py               # HTTP/HTTPS analysis
+│   ├── ssh-analyzer.py                # SSH analysis tool
+│   ├── ntp-analyzer.py                # NTP analysis tool
+│   └── ...                            # Additional analysis tools
 ├── 01-basics/                         # Basic networking concepts
 │   ├── ping-traceroute/               # Network connectivity tools
 │   ├── network-interfaces/            # Interface configuration
+│   ├── ipv4-addressing/              # IPv4 addressing and subnetting
+│   ├── osi-model/                     # OSI model analysis
 │   └── basic-commands/                # Essential networking commands
 ├── 02-protocols/                      # Network protocols
 │   ├── tcp-udp/                       # Transport layer protocols
 │   ├── http-https/                    # Application layer protocols
 │   ├── dns/                          # Domain Name System
+│   ├── ssh/                          # Secure Shell
+│   ├── ntp/                          # Network Time Protocol
 │   └── dhcp/                         # Dynamic Host Configuration Protocol
 ├── 03-docker-networks/                # Container networking
 │   ├── bridge-networks/               # Docker bridge networks
@@ -32,14 +64,16 @@ networking/
 │   ├── routing/                       # Static and dynamic routing
 │   ├── load-balancing/                # Load balancing techniques
 │   └── monitoring/                    # Network monitoring tools
-├── tools/                            # Utility scripts and tools
+├── tools/                            # Additional utility tools
 │   ├── network-scanner.py            # Network discovery tool
 │   ├── bandwidth-test.py             # Bandwidth testing
 │   └── port-scanner.py               # Port scanning utility
-├── docker-compose.yml                # Docker services for network simulation
-├── container-practice.sh             # Containerized practice script
-├── CONTAINER_PRACTICE.md             # Container practice guide
-└── requirements.txt                  # Python dependencies
+└── admin/                            # Administrative documentation
+    ├── README.md                      # Admin overview
+    ├── ARCHITECTURE.md                # System architecture
+    ├── DEVELOPMENT.md                 # Development guidelines
+    ├── DEPLOYMENT.md                  # Deployment procedures
+    └── MAINTENANCE.md                 # Maintenance procedures
 ```
 
 ## 🚀 Quick Start
@@ -53,7 +87,7 @@ git clone https://github.com/your-username/networking-learning.git
 cd networking-learning
 
 # Run automated installation
-./install.sh
+./bin/install.sh
 ```
 
 ### Containerized Practice (Recommended)
@@ -61,13 +95,13 @@ cd networking-learning
 
 ```bash
 # Start the networking practice environment
-./container-practice.sh start
+./bin/container-practice.sh start
 
 # Enter practice container
-./container-practice.sh enter
+./bin/container-practice.sh enter
 
 # Run practice exercises
-./container-practice.sh exercises
+./bin/container-practice.sh exercises
 ```
 
 **Why Use Containers?**
@@ -82,7 +116,7 @@ cd networking-learning
 
 ```bash
 # Run setup script
-./setup.sh
+./bin/setup.sh
 
 # Or manually install dependencies
 pip3 install -r requirements.txt
@@ -108,7 +142,7 @@ brew install python3 docker docker-compose wireshark tcpdump nmap
 # Clone and setup
 git clone https://github.com/your-username/networking-learning.git
 cd networking-learning
-./install.sh
+./bin/install.sh
 ```
 
 #### Linux (Ubuntu/Debian)
@@ -120,7 +154,7 @@ sudo apt install -y python3 python3-pip docker.io docker-compose
 # Clone and setup
 git clone https://github.com/your-username/networking-learning.git
 cd networking-learning
-./install.sh
+./bin/install.sh
 ```
 
 #### Windows (WSL2)
@@ -135,10 +169,10 @@ sudo apt install -y python3 python3-pip docker.io docker-compose
 # Clone and setup
 git clone https://github.com/your-username/networking-learning.git
 cd networking-learning
-./install.sh
+./bin/install.sh
 ```
 
-**See `INSTALLATION.md` for detailed installation instructions.**
+**See [docs/guides/INSTALLATION.md](docs/guides/INSTALLATION.md) for detailed installation instructions.**
 
 ## Learning Path
 
@@ -218,25 +252,25 @@ This is a personal learning project. Feel free to add your own exercises and exp
 
 - **Version**: 1.0.0
 - **License**: MIT License
-- **Changelog**: See [CHANGELOG.md](CHANGELOG.md)
-- **Contributing**: See [CONTRIBUTING.md](CONTRIBUTING.md)
+- **Changelog**: See [docs/legal/CHANGELOG.md](docs/legal/CHANGELOG.md)
+- **Contributing**: See [docs/legal/CONTRIBUTING.md](docs/legal/CONTRIBUTING.md)
 
 ### Version Management
 
 ```bash
 # Show current version
-./version.sh show
+./bin/version.sh show
 
 # Update to specific version
-./version.sh update 1.1.0
+./bin/version.sh update 1.1.0
 
 # Increment version
-./version.sh patch    # 1.0.0 → 1.0.1
-./version.sh minor    # 1.0.0 → 1.1.0
-./version.sh major    # 1.0.0 → 2.0.0
+./bin/version.sh patch    # 1.0.0 → 1.0.1
+./bin/version.sh minor    # 1.0.0 → 1.1.0
+./bin/version.sh major    # 1.0.0 → 2.0.0
 
 # Create release
-./version.sh release 1.1.0
+./bin/version.sh release 1.1.0
 ```
 
 ## Resources

@@ -32,7 +32,9 @@ print_error() {
 
 # Get current version
 get_current_version() {
-    if [ -f "VERSION" ]; then
+    if [ -f "docs/legal/VERSION" ]; then
+        cat docs/legal/VERSION
+    elif [ -f "VERSION" ]; then
         cat VERSION
     else
         echo "0.0.0"
@@ -52,7 +54,7 @@ validate_version() {
 # Update version in VERSION file
 update_version_file() {
     local new_version="$1"
-    echo "$new_version" > VERSION
+    echo "$new_version" > docs/legal/VERSION
     print_success "Updated VERSION file to $new_version"
 }
 
@@ -114,7 +116,7 @@ update_changelog() {
     local new_version="$1"
     local date=$(date +%Y-%m-%d)
     
-    if [ -f "CHANGELOG.md" ]; then
+    if [ -f "docs/legal/CHANGELOG.md" ]; then
         # Create temporary file with new changelog entry
         cat > CHANGELOG.tmp << EOF
 # Changelog
@@ -141,10 +143,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 EOF
         
         # Append existing changelog content (skip first 3 lines)
-        tail -n +4 CHANGELOG.md >> CHANGELOG.tmp
+        tail -n +4 docs/legal/CHANGELOG.md >> CHANGELOG.tmp
         
         # Replace original changelog
-        mv CHANGELOG.tmp CHANGELOG.md
+        mv CHANGELOG.tmp docs/legal/CHANGELOG.md
         
         print_success "Updated CHANGELOG.md with version $new_version"
     else
@@ -176,12 +178,12 @@ show_version_info() {
     echo "Next version: $(get_next_version "$version")"
     echo ""
     echo "Files that will be updated:"
-    echo "  - VERSION"
+    echo "  - docs/legal/VERSION"
     echo "  - package.json"
     echo "  - Python files with __version__"
     echo "  - Shell scripts with VERSION="
     echo "  - README.md"
-    echo "  - CHANGELOG.md"
+    echo "  - docs/legal/CHANGELOG.md"
 }
 
 # Get version type (major, minor, patch)

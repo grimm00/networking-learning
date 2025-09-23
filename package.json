@@ -22,11 +22,12 @@
     "url": "https://github.com/sponsors/your-username"
   },
   "scripts": {
-    "install": "./install.sh",
-    "setup": "./setup.sh",
-    "start": "./container-practice.sh start",
-    "enter": "./container-practice.sh enter",
-    "test": "./container-practice.sh test",
+    "install": "./bin/install.sh",
+    "setup": "./bin/setup.sh",
+    "start": "./bin/container-practice.sh start",
+    "enter": "./bin/container-practice.sh enter",
+    "test": "./bin/test-installation.sh",
+    "version": "./bin/version.sh show",
     "clean": "docker-compose down && docker system prune -f"
   },
   "keywords": [
