@@ -47,7 +47,7 @@ echo ""
 # Layer 6 (Presentation) Protocols
 echo "LAYER 6 (Presentation) Protocols:"
 echo "---------------------------------"
-test_protocol "SSL/TLS" "openssl s_client -connect google.com:443 -servername google.com -quiet" "Layer 6" "Encryption and data translation"
+test_protocol "SSL/TLS" "timeout 5 openssl s_client -connect google.com:443 -servername google.com -quiet 2>/dev/null | head -3" "Layer 6" "Encryption and data translation"
 test_protocol "File Encoding" "file -bi /etc/passwd" "Layer 6" "Character encoding detection"
 
 echo ""
@@ -62,7 +62,7 @@ echo ""
 # Layer 4 (Transport) Protocols
 echo "LAYER 4 (Transport) Protocols:"
 echo "------------------------------"
-test_protocol "TCP" "telnet google.com 80" "Layer 4" "Reliable, connection-oriented transport"
+test_protocol "TCP" "timeout 3 bash -c 'echo | telnet google.com 80' 2>/dev/null | head -3" "Layer 4" "Reliable, connection-oriented transport"
 test_protocol "UDP" "nc -u -z 8.8.8.8 53" "Layer 4" "Unreliable, connectionless transport"
 test_protocol "Port Status" "netstat -tuln | head -5" "Layer 4" "Port and connection management"
 
@@ -73,7 +73,7 @@ echo "LAYER 3 (Network) Protocols:"
 echo "----------------------------"
 test_protocol "IP" "ping -c 2 8.8.8.8" "Layer 3" "Internet Protocol addressing"
 test_protocol "ICMP" "ping -c 2 google.com" "Layer 3" "Internet Control Message Protocol"
-test_protocol "Routing" "traceroute -m 3 google.com" "Layer 3" "IP routing and path determination"
+test_protocol "Routing" "timeout 10 traceroute -m 3 google.com 2>/dev/null" "Layer 3" "IP routing and path determination"
 
 echo ""
 

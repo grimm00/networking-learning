@@ -1,0 +1,1 @@
+../../scripts/interface-config-lab.sh
