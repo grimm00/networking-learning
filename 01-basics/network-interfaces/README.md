@@ -49,6 +49,8 @@ Network interfaces are the physical and logical connections between devices and 
 ### Linux Commands (Primary)
 
 #### `ip` Command - Modern Interface Management
+
+**Command Examples:**
 ```bash
 # Show all interfaces
 ip link show
@@ -75,7 +77,56 @@ sudo ip route add 10.0.0.0/8 via 192.168.1.1 dev eth0
 sudo ip route del 10.0.0.0/8 via 192.168.1.1 dev eth0
 ```
 
+**Expected Output Analysis:**
+
+**`ip link show` - Interface Status:**
+```bash
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP mode DEFAULT group default qlen 1000
+    link/ether 52:54:00:12:34:56 brd ff:ff:ff:ff:ff:ff
+```
+
+**What Each Part Means:**
+- **`1:`, `2:`** - Interface index number
+- **`lo`, `eth0`** - Interface name
+- **`<LOOPBACK,UP,LOWER_UP>`** - Interface flags:
+  - `LOOPBACK` - Loopback interface
+  - `BROADCAST` - Supports broadcast
+  - `MULTICAST` - Supports multicast
+  - `UP` - Interface is administratively up
+  - `LOWER_UP` - Physical layer is up
+- **`mtu 65536`** - Maximum Transmission Unit (packet size)
+- **`qdisc noqueue`** - Queueing discipline (traffic shaping)
+- **`state UP`** - Interface state (UP/DOWN/UNKNOWN)
+- **`link/ether 52:54:00:12:34:56`** - MAC address
+- **`brd ff:ff:ff:ff:ff:ff`** - Broadcast address
+
+**`ip addr show` - IP Address Information:**
+```bash
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 52:54:00:12:34:56 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.1.100/24 brd 192.168.1.255 scope global eth0
+       valid_lft 86399sec preferred_lft 86399sec
+    inet6 fe80::5054:ff:fe12:3456/64 scope link
+       valid_lft forever preferred_lft forever
+```
+
+**What Each Part Means:**
+- **`inet 192.168.1.100/24`** - IPv4 address with CIDR notation
+- **`brd 192.168.1.255`** - Broadcast address for the subnet
+- **`scope global`** - Address scope (global, link, host)
+- **`valid_lft 86399sec`** - Valid lifetime (DHCP lease time)
+- **`preferred_lft 86399sec`** - Preferred lifetime
+- **`inet6 fe80::5054:ff:fe12:3456/64`** - IPv6 link-local address
+
 #### `ss` Command - Socket Statistics
+
+**Command Examples:**
 ```bash
 # Show all listening sockets
 ss -tuln
@@ -87,9 +138,43 @@ ss -i
 ss -tulnp
 ```
 
+**Expected Output Analysis:**
+
+**`ss -tuln` - Listening Sockets:**
+```bash
+Netid  State   Recv-Q  Send-Q   Local Address:Port    Peer Address:Port
+udp    UNCONN  0       0        127.0.0.1:53          0.0.0.0:*
+udp    UNCONN  0       0        0.0.0.0:68            0.0.0.0:*
+tcp    LISTEN  0       128      0.0.0.0:22            0.0.0.0:*
+tcp    LISTEN  0       128      127.0.0.1:631         0.0.0.0:*
+tcp    LISTEN  0       128      127.0.0.1:25          0.0.0.0:*
+```
+
+**What Each Part Means:**
+- **`Netid`** - Protocol type (tcp, udp, unix)
+- **`State`** - Socket state:
+  - `LISTEN` - Server listening for connections
+  - `UNCONN` - UDP socket (connectionless)
+  - `ESTAB` - Established TCP connection
+- **`Recv-Q`** - Receive queue (bytes waiting to be read)
+- **`Send-Q`** - Send queue (bytes waiting to be sent)
+- **`Local Address:Port`** - Local IP and port
+- **`Peer Address:Port`** - Remote IP and port (`*` means any)
+
+**Common Ports You'll See:**
+- **Port 22** - SSH server
+- **Port 53** - DNS server
+- **Port 68** - DHCP client
+- **Port 80** - HTTP server
+- **Port 443** - HTTPS server
+- **Port 631** - CUPS printing service
+- **Port 25** - SMTP mail server
+
 ### macOS Commands (Legacy/Alternative)
 
 #### `ifconfig` Command
+
+**Command Examples:**
 ```bash
 # Show all interfaces
 ifconfig -a
@@ -106,6 +191,42 @@ sudo ifconfig en0 down
 ifconfig en0 | grep -E "(RX|TX|errors|dropped)"
 ```
 
+**Expected Output Analysis:**
+
+**`ifconfig en0` - macOS Interface Information:**
+```bash
+en0: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
+	options=6460<TSO4,TSO6,CHANNEL_IO,PARTIAL_CSUM,ZEROINVERT_CSUM>
+	ether 5c:e9:1e:81:26:38
+	inet 10.8.56.204 netmask 0xfffff800 broadcast 10.8.63.255
+	inet6 fe80::1896:6387:6bd:7cf7%en0 prefixlen 64 secured scopeid 0xe
+	nd6 options=201<PERFORMNUD,DAD>
+	media: autoselect
+	status: active
+```
+
+**What Each Part Means:**
+- **`en0:`** - Interface name (Ethernet interface 0)
+- **`flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST>`** - Interface flags:
+  - `UP` - Interface is up
+  - `BROADCAST` - Supports broadcast
+  - `SMART` - Smart interface features enabled
+  - `RUNNING` - Interface is running
+  - `SIMPLEX` - Half-duplex communication
+  - `MULTICAST` - Supports multicast
+- **`mtu 1500`** - Maximum Transmission Unit
+- **`options=6460<TSO4,TSO6,CHANNEL_IO,PARTIAL_CSUM,ZEROINVERT_CSUM>`** - Hardware offload features
+- **`ether 5c:e9:1e:81:26:38`** - MAC address
+- **`inet 10.8.56.204`** - IPv4 address
+- **`netmask 0xfffff800`** - Network mask (hexadecimal)
+- **`broadcast 10.8.63.255`** - Broadcast address
+- **`inet6 fe80::1896:6387:6bd:7cf7%en0`** - IPv6 link-local address
+- **`prefixlen 64`** - IPv6 prefix length
+- **`secured`** - IPv6 address is secured
+- **`scopeid 0xe`** - IPv6 scope identifier
+- **`media: autoselect`** - Media type (auto-negotiated)
+- **`status: active`** - Interface status
+
 #### `networksetup` Command (macOS)
 ```bash
 # List network services
@@ -118,6 +239,120 @@ networksetup -getinfo "Ethernet"
 # Configure DNS
 networksetup -setdnsservers "Wi-Fi" 8.8.8.8 8.8.4.4
 ```
+
+## Interface Analysis Tools
+
+### Interface Analyzer Script
+
+The project includes a comprehensive Python script for analyzing network interfaces with educational context.
+
+**Command Examples:**
+```bash
+# List all available interfaces
+python3 interface-analyzer.py -l
+
+# Analyze all interfaces
+python3 interface-analyzer.py -a
+
+# Analyze specific interface
+python3 interface-analyzer.py -i eth0
+
+# Verbose analysis with statistics
+python3 interface-analyzer.py -i eth0 -v
+
+# Show routing information
+python3 interface-analyzer.py -r
+
+# Test connectivity
+python3 interface-analyzer.py -t
+```
+
+**Expected Output Analysis:**
+
+**`python3 interface-analyzer.py -l` - Interface Listing:**
+```bash
+📋 Available Network Interfaces
+==================================================
+🖥️  Running on host system
+
+📡 All interfaces found: 8
+   • lo0 (Loopback) - ✅ Analyzable
+   • en0 (Ethernet) - ✅ Analyzable
+   • en1 (Ethernet) - ✅ Analyzable
+   • en2 (Ethernet) - ✅ Analyzable
+   • en3 (Ethernet) - ✅ Analyzable
+   • en4 (Ethernet) - ✅ Analyzable
+   • en5 (Ethernet) - ✅ Analyzable
+   • en6 (Ethernet) - ✅ Analyzable
+
+🎯 Analyzable interfaces: 8
+   • lo0 (Loopback)
+   • en0 (Ethernet)
+   • en1 (Ethernet)
+   • en2 (Ethernet)
+   • en3 (Ethernet)
+   • en4 (Ethernet)
+   • en5 (Ethernet)
+   • en6 (Ethernet)
+```
+
+**`python3 interface-analyzer.py -i en0 -v` - Detailed Analysis:**
+```bash
+🚀 Network Interface Analyzer
+==================================================
+🖥️  Host system environment detected
+
+🔍 Analyzing interface: en0
+==================================================
+📡 Interface: en0
+🔌 State: UP
+📏 MTU: 1500
+🔗 MAC Address: 5c:e9:1e:81:26:38
+🌐 Type: Ethernet
+📍 IP Addresses:
+   • 10.8.56.204/21
+📊 Statistics:
+   • RX Bytes: 0
+   • RX Packets: 26,741,435
+   • RX Errors: 0
+   • TX Bytes: 0
+   • TX Packets: 20,525,796
+   • TX Errors: 0
+🔗 Connectivity Test:
+   ✅ Interface can send packets
+
+✅ Analysis completed successfully
+```
+
+**Container Environment Output:**
+```bash
+🚀 Network Interface Analyzer
+==================================================
+🐳 Container environment detected
+
+🔍 Analyzing interface: tunl0@NONE
+==================================================
+📡 Interface: tunl0@NONE (IP-in-IP Tunnel)
+🔌 State: DOWN (requires configuration)
+💡 Educational: Used for IP-in-IP tunneling, encapsulates IPv4 packets in IPv4
+📝 Note: This interface is in DOWN state and requires configuration to be active
+
+🔍 Analyzing interface: eth0@if850
+==================================================
+📡 Interface: eth0@if850 (Docker Internal)
+🔌 State: Active (Docker managed)
+💡 Educational: Docker internal network interface
+📝 Note: This is Docker's internal networking - connects container to host network
+🔗 Purpose: Provides network connectivity between container and Docker bridge
+```
+
+**What Each Part Means:**
+- **Environment Detection**: Automatically detects container vs. host system
+- **Interface Types**: Shows specific interface types (Ethernet, Loopback, Tunnel, etc.)
+- **Educational Context**: Provides learning explanations for virtual interfaces
+- **Statistics**: Shows packet counts and error statistics when available
+- **Connectivity Tests**: Tests if interface can send packets
+- **State Information**: Shows UP/DOWN status with explanations
 
 ## Interface Configuration
 
@@ -278,6 +513,8 @@ sudo ip link set bond0 up
 
 #### Interface Not Coming Up
 **Symptoms**: Interface shows DOWN state, no connectivity
+
+**Diagnostic Commands:**
 ```bash
 # Check interface status
 ip link show eth0
@@ -290,14 +527,77 @@ ethtool eth0
 
 # Restart network service
 sudo systemctl restart NetworkManager
-
-# Check if interface is disabled in BIOS/UEFI
-# Check physical cable connections
-# Verify switch/router port is active
 ```
+
+**Expected Output Analysis:**
+
+**`ip link show eth0` - Interface Status:**
+```bash
+# Healthy interface
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP mode DEFAULT group default qlen 1000
+    link/ether 52:54:00:12:34:56 brd ff:ff:ff:ff:ff:ff
+
+# Problematic interface
+2: eth0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc pfifo_fast state DOWN mode DEFAULT group default qlen 1000
+    link/ether 52:54:00:12:34:56 brd ff:ff:ff:ff:ff:ff
+```
+
+**What to Look For:**
+- **`UP`** - Interface is administratively up ✅
+- **`LOWER_UP`** - Physical layer is up ✅
+- **`NO-CARRIER`** - No cable connected ❌
+- **`state UP`** - Interface is operational ✅
+- **`state DOWN`** - Interface is not operational ❌
+
+**`dmesg | grep eth0` - Driver Messages:**
+```bash
+# Successful driver load
+[    2.345678] e1000: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: RX/TX
+[    2.345679] IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+
+# Driver error
+[    2.345678] e1000: eth0: e1000_probe: Failed to initialize the device
+[    2.345679] e1000: probe of 0000:02:01.0 failed with error -5
+```
+
+**`ethtool eth0` - Hardware Information:**
+```bash
+Settings for eth0:
+	Supported ports: [ TP ]
+	Supported link modes:   10baseT/Half 10baseT/Full
+	                        100baseT/Half 100baseT/Full
+	                        1000baseT/Full
+	Supported pause frame use: No
+	Supports auto-negotiation: Yes
+	Advertised link modes:  10baseT/Half 10baseT/Full
+	                        100baseT/Half 100baseT/Full
+	                        1000baseT/Full
+	Advertised pause frame use: No
+	Advertised auto-negotiation: Yes
+	Speed: 1000Mb/s
+	Duplex: Full
+	Port: Twisted Pair
+	PHYAD: 1
+	Transceiver: internal
+	Auto-negotiation: on
+	MDI-X: Unknown
+	Supports Wake-on: pumbg
+	Wake-on: d
+	Current message level: 0x00000007 (7)
+	Link detected: yes
+```
+
+**What to Check:**
+- **`Link detected: yes`** - Cable is connected ✅
+- **`Link detected: no`** - No cable or bad cable ❌
+- **`Speed: 1000Mb/s`** - Negotiated speed
+- **`Duplex: Full`** - Full duplex communication
+- **`Auto-negotiation: on`** - Speed/duplex auto-negotiation enabled
 
 #### No IP Address
 **Symptoms**: Interface is UP but has no IP address assigned
+
+**Diagnostic Commands:**
 ```bash
 # Check DHCP client
 sudo dhclient -v eth0
@@ -314,6 +614,57 @@ ping -c 3 192.168.1.1
 # Check DHCP client logs
 journalctl -u NetworkManager
 ```
+
+**Expected Output Analysis:**
+
+**`ip addr show eth0` - No IP Address:**
+```bash
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 52:54:00:12:34:56 brd ff:ff:ff:ff:ff:ff
+    # No 'inet' line = no IP address assigned
+```
+
+**`sudo dhclient -v eth0` - DHCP Client Output:**
+```bash
+# Successful DHCP
+Internet Systems Consortium DHCP Client 4.4.1
+Copyright 2004-2018 Internet Systems Consortium.
+All rights reserved.
+For info, please visit https://www.isc.org/software/dhcp/
+
+Listening on LPF/eth0/52:54:00:12:34:56
+Sending on   LPF/eth0/52:54:00:12:34:56
+Sending on   Socket/fallback
+DHCPDISCOVER on eth0 to 255.255.255.255 port 67 interval 3
+DHCPOFFER from 192.168.1.1
+DHCPREQUEST for 192.168.1.100 on eth0 to 192.168.1.1 port 67
+DHCPACK from 192.168.1.1
+bound to 192.168.1.100 -- renewal in 86400 seconds.
+
+# Failed DHCP
+DHCPDISCOVER on eth0 to 255.255.255.255 port 67 interval 3
+DHCPDISCOVER on eth0 to 255.255.255.255 port 67 interval 7
+DHCPDISCOVER on eth0 to 255.255.255.255 port 67 interval 12
+No DHCPOFFERS received.
+No working leases in persistent database - sleeping.
+```
+
+**`ip route show` - Routing Table:**
+```bash
+# With default route
+default via 192.168.1.1 dev eth0 proto dhcp metric 100
+192.168.1.0/24 dev eth0 proto kernel scope link src 192.168.1.100 metric 100
+
+# Without default route (problematic)
+192.168.1.0/24 dev eth0 proto kernel scope link src 192.168.1.100 metric 100
+```
+
+**What to Look For:**
+- **`inet` line missing** - No IP address assigned ❌
+- **`DHCPACK`** - DHCP successful ✅
+- **`No DHCPOFFERS`** - DHCP server not reachable ❌
+- **`default via`** - Default route exists ✅
+- **No `default via`** - No default route ❌
 
 #### Slow Performance
 **Symptoms**: High latency, low throughput, packet loss
