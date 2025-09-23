@@ -100,16 +100,44 @@ class InterfaceAnalyzer:
                 if ':' in line and 'state' in line:
                     match = re.search(r'(\d+):\s+([^:]+):', line)
                     if match:
-                        interfaces.append(match.group(2))
+                        interface_name = match.group(2)
+                        # Filter out Docker internal interfaces and virtual interfaces
+                        if self._should_analyze_interface(interface_name):
+                            interfaces.append(interface_name)
         else:
             # Parse ifconfig output
             for line in stdout.split('\n'):
                 if line and not line.startswith(' ') and ':' in line:
                     interface = line.split(':')[0]
-                    if interface not in interfaces:
+                    if interface not in interfaces and self._should_analyze_interface(interface):
                         interfaces.append(interface)
         
         return interfaces
+    
+    def _should_analyze_interface(self, interface_name: str) -> bool:
+        """Determine if an interface should be analyzed"""
+        # Skip Docker internal interfaces (contain @)
+        if '@' in interface_name:
+            return False
+        
+        # Skip virtual tunnel interfaces that are typically not useful for analysis
+        virtual_interfaces = [
+            'tunl0', 'gre0', 'gretap0', 'erspan0', 'ip_vti0', 'ip6_vti0',
+            'sit0', 'ip6tnl0', 'ip6gre0', 'tun0', 'tap0'
+        ]
+        
+        # Skip if it's a known virtual interface
+        if interface_name in virtual_interfaces:
+            return False
+        
+        # Skip interfaces that start with virtual prefixes
+        virtual_prefixes = ['veth', 'docker', 'br-', 'virbr']
+        for prefix in virtual_prefixes:
+            if interface_name.startswith(prefix):
+                return False
+        
+        # Include loopback, ethernet, and wireless interfaces
+        return True
     
     def get_interface_info(self, interface: str) -> Optional[InterfaceInfo]:
         """Get detailed information about a specific interface"""
@@ -324,6 +352,8 @@ class InterfaceAnalyzer:
         info = self.get_interface_info(interface)
         if not info:
             print(f"❌ Could not get information for interface {interface}")
+            if self.verbose:
+                print(f"   This may be a virtual or Docker internal interface")
             return
         
         # Basic information
@@ -369,7 +399,9 @@ class InterfaceAnalyzer:
             print("❌ No network interfaces found")
             return
         
-        print(f"📡 Found {len(interfaces)} interfaces: {', '.join(interfaces)}")
+        print(f"📡 Found {len(interfaces)} analyzable interfaces: {', '.join(interfaces)}")
+        if self.verbose:
+            print("ℹ️  Note: Docker internal interfaces and virtual tunnels are filtered out")
         
         for interface in interfaces:
             self.analyze_interface(interface)
