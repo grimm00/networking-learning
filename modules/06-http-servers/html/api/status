@@ -1,0 +1,16 @@
+HTTP/1.1 200 OK
+Content-Type: application/json
+Server: nginx/1.29.1
+Date: Tue, 23 Sep 2025 20:25:00 GMT
+Connection: keep-alive
+
+{
+  "status": "ok",
+  "server": "nginx",
+  "version": "1.29.1",
+  "timestamp": "2025-09-23T20:25:00Z",
+  "uptime": "5 minutes",
+  "requests": 42,
+  "memory_usage": "2.1MB",
+  "cpu_usage": "0.5%"
+}

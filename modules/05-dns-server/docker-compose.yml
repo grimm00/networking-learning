@@ -13,12 +13,6 @@ services:
     restart: unless-stopped
     networks:
       - dns-network
-    healthcheck:
-      test: [ "CMD", "dig", "@localhost", "google.com", "+short" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
   coredns-advanced:
     image: coredns/coredns:latest

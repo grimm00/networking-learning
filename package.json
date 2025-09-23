@@ -77,12 +77,7 @@
     "bin/",
     "docs/",
     "scripts/",
-    "01-basics/",
-    "02-protocols/",
-    "03-docker-networks/",
-    "04-network-analysis/",
-    "05-security/",
-    "06-advanced/",
+    "modules/",
     "admin/",
     "tools/"
   ],

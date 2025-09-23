@@ -35,40 +35,52 @@ networking/
 │   ├── ssh-analyzer.py                # SSH analysis tool
 │   ├── ntp-analyzer.py                # NTP analysis tool
 │   └── ...                            # Additional analysis tools
-├── 01-basics/                         # Basic networking concepts
-│   ├── ping-traceroute/               # Network connectivity tools
-│   ├── network-interfaces/            # Interface configuration
-│   ├── ipv4-addressing/              # IPv4 addressing and subnetting
-│   ├── osi-model/                     # OSI model analysis
-│   └── basic-commands/                # Essential networking commands
-├── 02-protocols/                      # Network protocols
-│   ├── tcp-udp/                       # Transport layer protocols
-│   ├── http-https/                    # Application layer protocols
-│   ├── dns/                          # Domain Name System
-│   ├── ssh/                          # Secure Shell
-│   ├── ntp/                          # Network Time Protocol
-│   └── dhcp/                         # Dynamic Host Configuration Protocol
-├── 03-docker-networks/                # Container networking
-│   ├── bridge-networks/               # Docker bridge networks
-│   ├── overlay-networks/              # Multi-host networking
-│   └── custom-networks/               # Custom network configurations
-├── 04-network-analysis/               # Network monitoring and analysis
-│   ├── wireshark/                     # Packet capture and analysis
-│   ├── tcpdump/                       # Command-line packet capture
-│   └── netstat-ss/                    # Network statistics
-├── 05-dns-server/                     # DNS server configuration
-│   ├── coredns-configs/               # CoreDNS configuration files
-│   ├── zones/                         # DNS zone files
-│   ├── dns-lab.sh                     # Interactive DNS lab
-│   └── README.md                      # DNS server documentation
-├── 06-security/                       # Network security
-│   ├── firewalls/                     # Firewall configuration
-│   ├── vpn/                          # Virtual Private Networks
-│   └── ssl-tls/                      # Encryption protocols
-├── 07-advanced/                       # Advanced networking topics
-│   ├── routing/                       # Static and dynamic routing
-│   ├── load-balancing/                # Load balancing techniques
-│   └── monitoring/                    # Network monitoring tools
+├── modules/                           # Learning modules
+│   ├── 01-basics/                     # Basic networking concepts
+│   │   ├── ping-traceroute/           # Network connectivity tools
+│   │   ├── network-interfaces/        # Interface configuration
+│   │   ├── ipv4-addressing/          # IPv4 addressing and subnetting
+│   │   ├── osi-model/                 # OSI model analysis
+│   │   └── basic-commands/            # Essential networking commands
+│   ├── 02-protocols/                  # Network protocols
+│   │   ├── tcp-udp/                   # Transport layer protocols
+│   │   ├── http-https/                # Application layer protocols
+│   │   ├── dns/                      # Domain Name System
+│   │   ├── ssh/                      # Secure Shell
+│   │   ├── ntp/                      # Network Time Protocol
+│   │   └── dhcp/                     # Dynamic Host Configuration Protocol
+│   ├── 03-docker-networks/            # Container networking
+│   │   ├── bridge-networks/           # Docker bridge networks
+│   │   ├── overlay-networks/          # Multi-host networking
+│   │   └── custom-networks/           # Custom network configurations
+│   ├── 04-network-analysis/           # Network monitoring and analysis
+│   │   ├── wireshark/                 # Packet capture and analysis
+│   │   ├── tcpdump/                   # Command-line packet capture
+│   │   └── netstat-ss/                # Network statistics
+│   ├── 05-dns-server/                 # DNS server configuration
+│   │   ├── coredns-configs/           # CoreDNS configuration files
+│   │   ├── zones/                     # DNS zone files
+│   │   ├── dns-lab.sh                 # Interactive DNS lab
+│   │   ├── DOCKER_EXPLAINED.md        # Docker setup explanation
+│   │   └── README.md                  # DNS server documentation
+│   ├── 06-http-servers/               # HTTP server management
+│   │   ├── nginx-configs/             # Nginx configuration files
+│   │   ├── apache-configs/            # Apache configuration files
+│   │   ├── html/                      # Sample web content
+│   │   ├── ssl-certs/                 # SSL certificate examples
+│   │   ├── http-lab.sh                # Interactive HTTP server lab
+│   │   ├── docker-compose.yml         # HTTP server containers
+│   │   ├── DOCKER_EXPLAINED.md        # Docker setup explanation
+│   │   ├── README.md                  # HTTP server documentation
+│   │   └── quick-reference.md         # Quick reference guide
+│   ├── 06-security/                   # Network security
+│   │   ├── firewalls/                 # Firewall configuration
+│   │   ├── vpn/                      # Virtual Private Networks
+│   │   └── ssl-tls/                  # Encryption protocols
+│   └── 07-advanced/                   # Advanced networking topics
+│       ├── routing/                   # Static and dynamic routing
+│       ├── load-balancing/            # Load balancing techniques
+│       └── monitoring/                # Network monitoring tools
 ├── tools/                            # Additional utility tools
 │   ├── network-scanner.py            # Network discovery tool
 │   ├── bandwidth-test.py             # Bandwidth testing
@@ -80,6 +92,16 @@ networking/
     ├── DEPLOYMENT.md                  # Deployment procedures
     └── MAINTENANCE.md                 # Maintenance procedures
 ```
+
+## 🐳 Docker Setup Explained
+
+New to Docker? Check out these beginner-friendly explanations:
+
+- **[Main Project Docker Setup](DOCKER_EXPLAINED.md)** - Overview of the entire project's Docker configuration
+- **[HTTP Servers Docker Setup](modules/06-http-servers/DOCKER_EXPLAINED.md)** - Web server configurations explained
+- **[DNS Server Docker Setup](modules/05-dns-server/DOCKER_EXPLAINED.md)** - DNS server configurations explained
+
+These guides explain Docker concepts in simple terms, perfect for networking learners who are new to containerization.
 
 ## 🚀 Quick Start
 
