@@ -253,7 +253,16 @@ class InterfaceAnalyzer:
     
     def get_interface_info(self, interface: str) -> Optional[InterfaceInfo]:
         """Get detailed information about a specific interface"""
-        # Try ip command first (Linux)
+        # For interfaces with @ in the name, parse from full ip addr show output
+        if '@' in interface:
+            return self._get_interface_from_full_output(interface)
+        
+        # Try ip addr show first (Linux)
+        exit_code, stdout, stderr = self.run_command(['ip', 'addr', 'show', interface])
+        if exit_code == 0:
+            return self._parse_ip_addr_output(interface, stdout)
+        
+        # Fallback to ip link show (Linux)
         exit_code, stdout, stderr = self.run_command(['ip', 'link', 'show', interface])
         if exit_code == 0:
             return self._parse_ip_output(interface, stdout)
@@ -264,6 +273,131 @@ class InterfaceAnalyzer:
             return None
         
         return self._parse_ifconfig_output(interface, stdout)
+    
+    def _get_interface_from_full_output(self, interface: str) -> Optional[InterfaceInfo]:
+        """Get interface info by parsing full ip addr show output"""
+        # Get full ip addr show output
+        exit_code, stdout, stderr = self.run_command(['ip', 'addr', 'show'])
+        if exit_code != 0:
+            return None
+        
+        # Parse the full output to find our specific interface
+        return self._parse_full_ip_addr_output(interface, stdout)
+    
+    def _parse_full_ip_addr_output(self, interface: str, stdout: str) -> Optional[InterfaceInfo]:
+        """Parse full ip addr show output to find specific interface"""
+        state = "UNKNOWN"
+        mtu = 1500
+        mac_address = ""
+        is_up = False
+        is_loopback = interface.startswith('lo')
+        is_wireless = any(x in interface.lower() for x in ['wlan', 'wifi', 'wireless'])
+        ip_addresses = []
+        
+        lines = stdout.split('\n')
+        current_interface = None
+        
+        for i, line in enumerate(lines):
+            # Check if this line starts a new interface (format: "N: interface:")
+            if re.match(r'^\s*\d+:\s*' + re.escape(interface) + r':', line):
+                current_interface = interface
+                # Parse the interface header line
+                if 'UP' in line:
+                    state = "UP"
+                    is_up = True
+                elif 'DOWN' in line:
+                    state = "DOWN"
+                    is_up = False
+                
+                # Extract MTU
+                match = re.search(r'mtu (\d+)', line)
+                if match:
+                    mtu = int(match.group(1))
+                
+                # Continue parsing this interface's details
+                continue
+            
+            # If we're parsing our target interface
+            if current_interface == interface:
+                # Parse MAC address
+                if 'link/ether' in line:
+                    match = re.search(r'link/ether ([a-f0-9:]+)', line)
+                    if match:
+                        mac_address = match.group(1)
+                
+                # Parse IP addresses
+                if 'inet ' in line:
+                    match = re.search(r'inet (\d+\.\d+\.\d+\.\d+/\d+)', line)
+                    if match:
+                        ip_addresses.append(match.group(1))
+                
+                # Stop parsing when we hit the next interface
+                if line.strip() and not line.startswith(' ') and not line.startswith('\t') and ':' in line and interface not in line:
+                    break
+        
+        if current_interface is None:
+            return None
+        
+        return InterfaceInfo(
+            name=interface,
+            state=state,
+            mtu=mtu,
+            mac_address=mac_address,
+            ip_addresses=ip_addresses,
+            is_up=is_up,
+            is_loopback=is_loopback,
+            is_wireless=is_wireless,
+            errors={}
+        )
+    
+    def _parse_ip_addr_output(self, interface: str, stdout: str) -> Optional[InterfaceInfo]:
+        """Parse ip addr show command output"""
+        state = "UNKNOWN"
+        mtu = 1500
+        mac_address = ""
+        is_up = False
+        is_loopback = interface.startswith('lo')
+        is_wireless = any(x in interface.lower() for x in ['wlan', 'wifi', 'wireless'])
+        ip_addresses = []
+        
+        for line in stdout.split('\n'):
+            # Parse interface status line
+            if interface in line and 'mtu' in line:
+                if 'UP' in line:
+                    state = "UP"
+                    is_up = True
+                elif 'DOWN' in line:
+                    state = "DOWN"
+                    is_up = False
+                
+                # Extract MTU
+                match = re.search(r'mtu (\d+)', line)
+                if match:
+                    mtu = int(match.group(1))
+            
+            # Parse MAC address
+            if 'link/ether' in line:
+                match = re.search(r'link/ether ([a-f0-9:]+)', line)
+                if match:
+                    mac_address = match.group(1)
+            
+            # Parse IP addresses
+            if 'inet ' in line:
+                match = re.search(r'inet (\d+\.\d+\.\d+\.\d+/\d+)', line)
+                if match:
+                    ip_addresses.append(match.group(1))
+        
+        return InterfaceInfo(
+            name=interface,
+            state=state,
+            mtu=mtu,
+            mac_address=mac_address,
+            ip_addresses=ip_addresses,
+            is_up=is_up,
+            is_loopback=is_loopback,
+            is_wireless=is_wireless,
+            errors={}
+        )
     
     def _parse_ip_output(self, interface: str, stdout: str) -> Optional[InterfaceInfo]:
         """Parse ip command output"""
