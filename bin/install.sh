@@ -59,7 +59,10 @@ check_python() {
         
         # Check if version is 3.8+
         version=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
-        if [[ $(echo "$version >= 3.8" | bc -l) -eq 1 ]]; then
+        major=$(echo "$version" | cut -d. -f1)
+        minor=$(echo "$version" | cut -d. -f2)
+        
+        if [[ $major -gt 3 ]] || [[ $major -eq 3 && $minor -ge 8 ]]; then
             print_success "Python version is compatible (3.8+)"
         else
             print_error "Python 3.8+ required, found $version"
@@ -255,6 +258,12 @@ test_installation() {
         print_warning "HTTP analyzer test failed"
     fi
     
+    if python3 scripts/tcpdump-analyzer.py --help >/dev/null 2>&1; then
+        print_success "TCP dump analyzer working"
+    else
+        print_warning "TCP dump analyzer test failed"
+    fi
+    
     # Test system tools
     tools=("ping" "traceroute" "curl" "dig" "nmap")
     for tool in "${tools[@]}"; do
@@ -296,20 +305,28 @@ print_usage() {
     echo ""
     echo "You can now:"
     echo "  - Run Python scripts: python3 scripts/[script-name].py"
-    echo "  - Use containerized environment: ./container-practice.sh start"
-    echo "  - Enter container: ./container-practice.sh enter"
+    echo "  - Use containerized environment: ./bin/container-practice.sh start"
+    echo "  - Enter container: ./bin/container-practice.sh enter"
     echo ""
     echo "For containerized practice (recommended):"
-    echo "  ./container-practice.sh start"
-    echo "  ./container-practice.sh enter"
+    echo "  ./bin/container-practice.sh start"
+    echo "  ./bin/container-practice.sh enter"
     echo ""
     echo "For local development:"
     echo "  source venv/bin/activate  # Activate virtual environment"
     echo "  python3 scripts/interface-analyzer.py --help"
     echo ""
+    echo "Available tools:"
+    echo "  - Interface analysis: python3 scripts/interface-analyzer.py"
+    echo "  - DNS analysis: python3 scripts/dns-analyzer.py"
+    echo "  - HTTP analysis: python3 scripts/http-analyzer.py"
+    echo "  - Packet capture: python3 scripts/tcpdump-analyzer.py"
+    echo "  - Interactive labs: ./04-network-analysis/tcpdump/tcpdump-lab.sh"
+    echo ""
     echo "Documentation:"
     echo "  - README.md - Project overview"
-    echo "  - INSTALLATION.md - Detailed installation guide"
+    echo "  - docs/guides/INSTALLATION.md - Detailed installation guide"
+    echo "  - docs/guides/ - User guides"
     echo "  - admin/ - Technical documentation"
 }
 

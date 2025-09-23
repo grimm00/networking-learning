@@ -112,6 +112,7 @@ test_python_scripts() {
     run_test "ipv4-calculator" "python3 scripts/ipv4-calculator.py --help"
     run_test "ssh-analyzer" "python3 scripts/ssh-analyzer.py --help"
     run_test "ntp-analyzer" "python3 scripts/ntp-analyzer.py --help"
+    run_test "tcpdump-analyzer" "python3 scripts/tcpdump-analyzer.py --help"
 }
 
 # Test Docker (if available)
