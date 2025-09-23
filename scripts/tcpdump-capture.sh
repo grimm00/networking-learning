@@ -5,6 +5,17 @@
 
 set -e
 
+# Signal handling for clean exit
+cleanup() {
+    print_warning "Received interrupt signal. Cleaning up..."
+    if [ -n "$TCPDUMP_PID" ]; then
+        kill $TCPDUMP_PID 2>/dev/null || true
+    fi
+    exit 0
+}
+
+trap cleanup SIGINT SIGTERM
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -148,16 +159,37 @@ capture_packets() {
     # Start capture
     print_warning "Starting capture... (Press Ctrl+C to stop early)"
     
-    if timeout "$timeout" $cmd; then
-        print_success "Capture completed successfully"
-    else
-        local exit_code=$?
-        if [ $exit_code -eq 124 ]; then
+    # Start tcpdump in background
+    $cmd &
+    TCPDUMP_PID=$!
+    
+    # Wait for tcpdump to complete or timeout
+    local start_time=$(date +%s)
+    while kill -0 $TCPDUMP_PID 2>/dev/null; do
+        local current_time=$(date +%s)
+        local elapsed=$((current_time - start_time))
+        
+        if [ $elapsed -ge $timeout ]; then
             print_warning "Capture timed out after $timeout seconds"
-        else
-            print_error "Capture failed with exit code $exit_code"
-            return 1
+            kill $TCPDUMP_PID 2>/dev/null || true
+            wait $TCPDUMP_PID 2>/dev/null || true
+            break
         fi
+        
+        sleep 1
+    done
+    
+    # Wait for tcpdump to finish
+    wait $TCPDUMP_PID 2>/dev/null
+    local exit_code=$?
+    
+    if [ $exit_code -eq 0 ]; then
+        print_success "Capture completed successfully"
+    elif [ $exit_code -eq 130 ]; then
+        print_warning "Capture interrupted by user"
+    else
+        print_error "Capture failed with exit code $exit_code"
+        return 1
     fi
     
     # Check if file was created and has content
@@ -228,7 +260,17 @@ monitor_realtime() {
         cmd="$cmd $filter"
     fi
     
-    $cmd
+    # Start tcpdump in background
+    $cmd &
+    TCPDUMP_PID=$!
+    
+    # Wait for tcpdump to complete
+    wait $TCPDUMP_PID 2>/dev/null
+    local exit_code=$?
+    
+    if [ $exit_code -eq 130 ]; then
+        print_warning "Monitoring stopped by user"
+    fi
 }
 
 # Function to run predefined scenarios

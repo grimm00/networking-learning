@@ -59,8 +59,27 @@ class PacketAnalyzer:
     def capture_packets(self, interface: str, count: int = 100, 
                        filter_expr: str = "", timeout: int = 30) -> bool:
         """Capture packets using tcpdump"""
+        import tempfile
+        import os
+        import time
+        
         try:
-            cmd = ['sudo', 'tcpdump', '-i', interface, '-c', str(count), '-n']
+            # Create temporary file for tcpdump output
+            with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.pcap') as temp_file:
+                temp_filename = temp_file.name
+            
+            # Check if running as root, if so don't use sudo
+            if os.geteuid() == 0:
+                # If interface is 'any' or empty, don't specify -i flag
+                if interface and interface.lower() != 'any':
+                    cmd = ['tcpdump', '-i', interface, '-c', str(count), '-n', '-w', temp_filename]
+                else:
+                    cmd = ['tcpdump', '-c', str(count), '-n', '-w', temp_filename]
+            else:
+                if interface and interface.lower() != 'any':
+                    cmd = ['sudo', 'tcpdump', '-i', interface, '-c', str(count), '-n', '-w', temp_filename]
+                else:
+                    cmd = ['sudo', 'tcpdump', '-c', str(count), '-n', '-w', temp_filename]
             
             if filter_expr:
                 cmd.extend(['-f', filter_expr])
@@ -70,22 +89,70 @@ class PacketAnalyzer:
             
             print(f"🔍 Capturing packets on {interface}...")
             print(f"Command: {' '.join(cmd)}")
+            print(f"⏰ Starting capture for {timeout} seconds...")
+            print(f"💡 Generate some network traffic now (ping, arping, etc.)")
             
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+            # Start tcpdump process in background
+            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             
-            if result.returncode != 0:
-                print(f"❌ tcpdump failed: {result.stderr}")
-                return False
+            # Give tcpdump time to start
+            time.sleep(1)
             
-            self.parse_tcpdump_output(result.stdout)
-            return True
+            try:
+                # Wait for tcpdump to finish or timeout
+                stdout, stderr = process.communicate(timeout=timeout)
+                
+                if process.returncode != 0:
+                    print(f"❌ tcpdump failed: {stderr}")
+                    return False
+                
+                # Check if pcap file was created and has content
+                if os.path.exists(temp_filename) and os.path.getsize(temp_filename) > 0:
+                    # Read the pcap file and convert to text
+                    read_cmd = ['tcpdump', '-r', temp_filename, '-n']
+                    if self.verbose:
+                        read_cmd.append('-v')
+                    
+                    result = subprocess.run(read_cmd, capture_output=True, text=True)
+                    if result.returncode == 0 and result.stdout.strip():
+                        self.parse_tcpdump_output(result.stdout)
+                        return True
+                    else:
+                        print("⚠️ No packets captured")
+                        return False
+                else:
+                    print("⚠️ No packets captured")
+                    return False
+                    
+            except subprocess.TimeoutExpired:
+                process.kill()
+                stdout, stderr = process.communicate()
+                
+                # Check if pcap file was created and has content
+                if os.path.exists(temp_filename) and os.path.getsize(temp_filename) > 0:
+                    # Read the pcap file and convert to text
+                    read_cmd = ['tcpdump', '-r', temp_filename, '-n']
+                    if self.verbose:
+                        read_cmd.append('-v')
+                    
+                    result = subprocess.run(read_cmd, capture_output=True, text=True)
+                    if result.returncode == 0 and result.stdout.strip():
+                        self.parse_tcpdump_output(result.stdout)
+                        return True
+                    else:
+                        print("⚠️ No packets captured")
+                        return False
+                else:
+                    print(f"⏰ Capture timed out after {timeout} seconds")
+                    return False
             
-        except subprocess.TimeoutExpired:
-            print(f"⏰ Capture timed out after {timeout} seconds")
-            return False
         except Exception as e:
             print(f"❌ Error capturing packets: {e}")
             return False
+        finally:
+            # Clean up temporary file
+            if 'temp_filename' in locals() and os.path.exists(temp_filename):
+                os.unlink(temp_filename)
     
     def analyze_file(self, filename: str) -> bool:
         """Analyze packets from a pcap file"""
@@ -381,7 +448,7 @@ def main():
     )
     
     parser.add_argument('-f', '--file', help='Analyze pcap file')
-    parser.add_argument('-i', '--interface', help='Capture from interface')
+    parser.add_argument('-i', '--interface', default='any', help='Capture from interface (default: any)')
     parser.add_argument('-c', '--count', type=int, default=100, help='Number of packets to capture')
     parser.add_argument('-t', '--timeout', type=int, default=30, help='Capture timeout in seconds')
     parser.add_argument('--filter', help='BPF filter expression')

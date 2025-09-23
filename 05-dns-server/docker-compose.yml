@@ -7,18 +7,18 @@ services:
     ports:
       - "53:53/udp"
       - "53:53/tcp"
-      - "8080:8080"  # Health check endpoint
-      - "9153:9153"  # Prometheus metrics
+      - "8080:8080" # Health check endpoint
+      - "9153:9153" # Prometheus metrics
     volumes:
       - ./coredns-configs:/etc/coredns:ro
       - ./zones:/etc/coredns/zones:ro
       - ./logs:/var/log/coredns
-    command: ["-conf", "/etc/coredns/basic.conf"]
+    command: [ "-conf", "/etc/coredns/basic.conf" ]
     restart: unless-stopped
     networks:
       - dns-network
     healthcheck:
-      test: ["CMD", "dig", "@localhost", "google.com", "+short"]
+      test: [ "CMD", "dig", "@localhost", "google.com", "+short" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -30,13 +30,13 @@ services:
     ports:
       - "5353:53/udp"
       - "5353:53/tcp"
-      - "8081:8080"  # Health check endpoint
-      - "9154:9153"  # Prometheus metrics
+      - "8081:8080" # Health check endpoint
+      - "9154:9153" # Prometheus metrics
     volumes:
       - ./coredns-configs:/etc/coredns:ro
       - ./zones:/etc/coredns/zones:ro
       - ./logs:/var/log/coredns
-    command: ["-conf", "/etc/coredns/advanced.conf"]
+    command: [ "-conf", "/etc/coredns/advanced.conf" ]
     restart: unless-stopped
     networks:
       - dns-network
@@ -49,13 +49,13 @@ services:
     ports:
       - "5354:53/udp"
       - "5354:53/tcp"
-      - "8082:8080"  # Health check endpoint
-      - "9155:9153"  # Prometheus metrics
+      - "8082:8080" # Health check endpoint
+      - "9155:9153" # Prometheus metrics
     volumes:
       - ./coredns-configs:/etc/coredns:ro
       - ./zones:/etc/coredns/zones:ro
       - ./logs:/var/log/coredns
-    command: ["-conf", "/etc/coredns/secure.conf"]
+    command: [ "-conf", "/etc/coredns/secure.conf" ]
     restart: unless-stopped
     networks:
       - dns-network
@@ -65,7 +65,7 @@ services:
   dns-test-client:
     image: alpine:latest
     container_name: dns-test-client
-    command: ["tail", "-f", "/dev/null"]
+    command: [ "tail", "-f", "/dev/null" ]
     depends_on:
       - coredns
     networks:

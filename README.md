@@ -56,11 +56,16 @@ networking/
 │   ├── wireshark/                     # Packet capture and analysis
 │   ├── tcpdump/                       # Command-line packet capture
 │   └── netstat-ss/                    # Network statistics
-├── 05-security/                       # Network security
+├── 05-dns-server/                     # DNS server configuration
+│   ├── coredns-configs/               # CoreDNS configuration files
+│   ├── zones/                         # DNS zone files
+│   ├── dns-lab.sh                     # Interactive DNS lab
+│   └── README.md                      # DNS server documentation
+├── 06-security/                       # Network security
 │   ├── firewalls/                     # Firewall configuration
 │   ├── vpn/                          # Virtual Private Networks
 │   └── ssl-tls/                      # Encryption protocols
-├── 06-advanced/                       # Advanced networking topics
+├── 07-advanced/                       # Advanced networking topics
 │   ├── routing/                       # Static and dynamic routing
 │   ├── load-balancing/                # Load balancing techniques
 │   └── monitoring/                    # Network monitoring tools
