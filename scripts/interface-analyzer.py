@@ -6,6 +6,10 @@ A comprehensive tool for analyzing network interfaces, their configuration,
 performance, and connectivity. Provides detailed information about interface
 states, IP addresses, routing, and network statistics.
 
+Version: 1.0.0
+License: MIT
+"""
+
 Usage:
     python3 interface-analyzer.py [options]
 

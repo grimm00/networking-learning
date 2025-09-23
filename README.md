@@ -214,9 +214,36 @@ By the end of this project, you will understand:
 
 This is a personal learning project. Feel free to add your own exercises and experiments!
 
+## Version and License
+
+- **Version**: 1.0.0
+- **License**: MIT License
+- **Changelog**: See [CHANGELOG.md](CHANGELOG.md)
+- **Contributing**: See [CONTRIBUTING.md](CONTRIBUTING.md)
+
+### Version Management
+
+```bash
+# Show current version
+./version.sh show
+
+# Update to specific version
+./version.sh update 1.1.0
+
+# Increment version
+./version.sh patch    # 1.0.0 → 1.0.1
+./version.sh minor    # 1.0.0 → 1.1.0
+./version.sh major    # 1.0.0 → 2.0.0
+
+# Create release
+./version.sh release 1.1.0
+```
+
 ## Resources
 
 - [Computer Networks: A Systems Approach](https://book.systemsapproach.org/)
 - [Wireshark User's Guide](https://www.wireshark.org/docs/wsug_html/)
 - [Docker Networking Documentation](https://docs.docker.com/network/)
 - [RFC Standards](https://www.rfc-editor.org/rfc-index.html)
+- [Semantic Versioning](https://semver.org/)
+- [Keep a Changelog](https://keepachangelog.com/)
