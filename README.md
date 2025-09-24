@@ -78,6 +78,8 @@ networking/
 │   ├── 04-network-analysis/           # Network monitoring and analysis
 │   │   ├── wireshark/                 # Packet capture and analysis
 │   │   ├── tcpdump/                   # Command-line packet capture
+│   │   ├── tshark/                    # Command-line Wireshark
+│   │   ├── nmap/                      # Network discovery and port scanning
 │   │   └── netstat-ss/                # Network statistics
 │   ├── 05-dns-server/                 # DNS server configuration
 │   │   ├── coredns-configs/           # CoreDNS configuration files
@@ -264,7 +266,9 @@ The uninstaller will:
 
 ### Phase 4: Analysis & Security (Week 7-8)
 - Use `04-network-analysis/` tools for troubleshooting
-- Implement security measures in `05-security/`
+- Master nmap for network discovery and port scanning
+- Master tshark for packet capture and analysis
+- Implement security measures in `08-security/`
 - Learn about firewalls, VPNs, and encryption
 
 ### Phase 5: Advanced Topics (Week 9-10)

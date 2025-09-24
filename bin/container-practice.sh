@@ -264,6 +264,40 @@ run_ntp_analysis() {
     docker exec $container /scripts/ntp-troubleshoot.sh "$server" -p "$port"
 }
 
+# Function to run Nmap analysis tools
+run_nmap_analysis() {
+    local container=${1:-net-practice}
+    local target=${2:-"127.0.0.1"}
+    local scan_type=${3:-"basic"}
+    
+    print_header "Running Nmap Analysis for $target"
+    
+    echo "🔍 Nmap Analyzer (Python):"
+    docker exec $container python3 /scripts/nmap-analyzer.py -t "$scan_type" "$target"
+    
+    echo ""
+    echo "🛠️ Nmap Lab (Interactive):"
+    echo "To run the interactive nmap lab, enter the container and run:"
+    echo "  /scripts/nmap-lab.sh"
+}
+
+# Function to run Tshark analysis tools
+run_tshark_analysis() {
+    local container=${1:-net-practice}
+    local interface=${2:-"any"}
+    local count=${3:-50}
+    
+    print_header "Running Tshark Analysis on interface $interface"
+    
+    echo "🔍 Tshark Analyzer (Python):"
+    docker exec $container python3 /scripts/tshark-analyzer.py -i "$interface" -c "$count"
+    
+    echo ""
+    echo "🛠️ Tshark Lab (Interactive):"
+    echo "To run the interactive tshark lab, enter the container and run:"
+    echo "  /scripts/tshark-lab.sh"
+}
+
 # Function to list all available scripts
 list_scripts() {
     local container=${1:-net-practice}
@@ -295,11 +329,13 @@ show_menu() {
     echo "7. Run DNS Analysis"
     echo "8. Run SSH Analysis"
     echo "9. Run NTP Analysis"
-    echo "10. List All Scripts"
-    echo "11. Show Available Scenarios"
-    echo "12. Exit"
+    echo "10. Run Nmap Analysis"
+    echo "11. Run Tshark Analysis"
+    echo "12. List All Scripts"
+    echo "13. Show Available Scenarios"
+    echo "14. Exit"
     echo ""
-    read -p "Choose an option (1-12): " choice
+    read -p "Choose an option (1-14): " choice
     
     case $choice in
         1)
@@ -353,17 +389,34 @@ show_menu() {
             run_ntp_analysis net-practice ${server:-pool.ntp.org} ${port:-123}
             ;;
         10)
-            list_scripts net-practice
+            echo "Available containers:"
+            echo "  - net-practice (main practice container)"
+            echo "  - firewall-test (firewall testing)"
+            read -p "Enter container name (default: net-practice): " container
+            read -p "Enter target (default: 127.0.0.1): " target
+            read -p "Enter scan type (basic/discovery/ports/services/os/scripts/comprehensive, default: basic): " scan_type
+            run_nmap_analysis ${container:-net-practice} ${target:-127.0.0.1} ${scan_type:-basic}
             ;;
         11)
-            show_scenarios
+            echo "Available containers:"
+            echo "  - net-practice (main practice container)"
+            read -p "Enter container name (default: net-practice): " container
+            read -p "Enter interface (default: any): " interface
+            read -p "Enter packet count (default: 50): " count
+            run_tshark_analysis ${container:-net-practice} ${interface:-any} ${count:-50}
             ;;
         12)
+            list_scripts net-practice
+            ;;
+        13)
+            show_scenarios
+            ;;
+        14)
             print_success "Goodbye!"
             exit 0
             ;;
         *)
-            print_error "Invalid option. Please choose 1-10."
+            print_error "Invalid option. Please choose 1-14."
             ;;
     esac
 }
@@ -405,6 +458,16 @@ if [ $# -gt 0 ]; then
             read -p "Enter NTP port (default: 123): " port
             run_ntp_analysis net-practice ${server:-pool.ntp.org} ${port:-123}
             ;;
+        nmap)
+            read -p "Enter target to scan (default: 127.0.0.1): " target
+            read -p "Enter scan type (basic/discovery/ports/services/os/scripts/comprehensive, default: basic): " scan_type
+            run_nmap_analysis net-practice ${target:-127.0.0.1} ${scan_type:-basic}
+            ;;
+        tshark)
+            read -p "Enter interface (default: any): " interface
+            read -p "Enter packet count (default: 50): " count
+            run_tshark_analysis net-practice ${interface:-any} ${count:-50}
+            ;;
         scenarios)
             show_scenarios
             ;;
@@ -412,7 +475,7 @@ if [ $# -gt 0 ]; then
             list_scripts net-practice
             ;;
         *)
-            echo "Usage: $0 {start|stop|enter|exercises|info|run|dns|ssh|ntp|scenarios|list-scripts}"
+            echo "Usage: $0 {start|stop|enter|exercises|info|run|dns|ssh|ntp|nmap|scenarios|list-scripts}"
             echo "  start         - Start the networking environment"
             echo "  stop          - Stop the networking environment"
             echo "  enter         - Enter practice container"
@@ -422,6 +485,7 @@ if [ $# -gt 0 ]; then
             echo "  dns           - Run DNS analysis"
             echo "  ssh           - Run SSH analysis"
             echo "  ntp           - Run NTP analysis"
+            echo "  nmap          - Run Nmap analysis"
             echo "  scenarios     - Show available scenarios"
             echo "  list-scripts  - List all available scripts"
             exit 1
