@@ -201,6 +201,27 @@ cd networking-learning
 
 **See [docs/guides/INSTALLATION.md](docs/guides/INSTALLATION.md) for detailed installation instructions.**
 
+### Uninstalling
+
+To completely remove the project and all its components:
+
+```bash
+# Remove project components (keeps Git repository)
+./bin/uninstall.sh
+
+# Remove everything including Git repository
+./bin/uninstall.sh --git
+
+# Skip confirmation prompt
+./bin/uninstall.sh --force
+```
+
+The uninstaller will:
+- Stop and remove all Docker containers, images, networks, and volumes
+- Remove the Python virtual environment
+- Clean up build artifacts and temporary files
+- Optionally remove the Git repository
+
 ## Learning Path
 
 ### Phase 1: Fundamentals (Week 1-2)

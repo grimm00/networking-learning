@@ -190,6 +190,7 @@ validate_script_path_references() {
         "bin/check-ports.sh"
         "bin/test-installation.sh"
         "bin/install.sh"
+        "bin/uninstall.sh"
     )
     
     for script in "${shell_scripts[@]}"; do
@@ -380,6 +381,7 @@ main() {
         echo "  - Start modules: ./bin/start-module.sh [module] start"
         echo "  - Run tests: ./bin/test-installation.sh"
         echo "  - Check ports: ./bin/check-ports.sh"
+        echo "  - Uninstall: ./bin/uninstall.sh"
         echo "  - Use scripts: python3 scripts/[script-name].py"
     else
         print_error "Some validations failed. Please check the errors above."

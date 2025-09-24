@@ -335,7 +335,32 @@ flake8 scripts/
 
 ## Uninstallation
 
-### Remove Python Packages
+### Automated Uninstall (Recommended)
+
+The easiest way to remove the project is using the built-in uninstall script:
+
+```bash
+# Remove project components (keeps Git repository)
+./bin/uninstall.sh
+
+# Remove everything including Git repository
+./bin/uninstall.sh --git
+
+# Skip confirmation prompt
+./bin/uninstall.sh --force
+```
+
+The uninstaller will automatically:
+- Stop and remove all Docker containers, images, networks, and volumes
+- Remove the Python virtual environment
+- Clean up build artifacts and temporary files
+- Optionally remove the Git repository
+
+### Manual Uninstall
+
+If you prefer to remove components manually:
+
+#### Remove Python Packages
 ```bash
 # Remove virtual environment
 rm -rf venv/
@@ -344,7 +369,7 @@ rm -rf venv/
 pip3 uninstall -r requirements.txt
 ```
 
-### Remove Docker Containers
+#### Remove Docker Containers
 ```bash
 # Stop and remove containers
 docker-compose down
