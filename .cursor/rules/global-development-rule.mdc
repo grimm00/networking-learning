@@ -1,0 +1,37 @@
+---
+description: Global development rules for Networking Learning Project - see global-development-rules.md for comprehensive rules
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Quick Reference - Global Development Rules
+
+## Core Principles
+- **Educational-First**: All code prioritizes learning over complexity
+- **Cross-Platform**: Works on macOS, Linux, Windows (WSL2)
+- **Container-First**: All networking tools run in Docker environments
+- **Comprehensive Documentation**: Extensive explanations of networking concepts
+
+## Code Standards
+- **Python**: PEP 8, type hints, comprehensive docstrings
+- **Shell**: POSIX-compliant, error handling, user feedback
+- **Docker**: Minimal, secure, well-documented configurations
+
+## Project Organization
+- **Centralized Tools**: All in `scripts/` with symbolic links in modules
+- **Module Independence**: Self-contained learning modules
+- **Output Organization**: Save to `output/` directories, never clutter root
+
+## Quality Assurance
+- **Validation**: Run `./bin/validate-installation.sh` before commits
+- **Backward Compatibility**: Maintain existing functionality
+- **Educational Context**: Explain networking concepts in all documentation
+
+## Documentation
+- **Progressive Learning**: Support basic to advanced concepts
+- **Real-world Examples**: Practical scenarios and expected outputs
+- **Troubleshooting**: Clear guides for common issues
+
+---
+
+**For comprehensive rules with detailed reasoning, see `global-development-rules.md`**
