@@ -13,6 +13,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Dict, Any, Tuple
 import argparse
 import json
+import os
 from datetime import datetime
 
 
@@ -173,16 +174,27 @@ class NetworkScanner:
             for port_info in self.results['open_ports']:
                 print(f"  {port_info['port']:5d}: {port_info['service']}")
 
-    def save_results(self, filename: str = None) -> None:
+    def save_results(self, filename: str = None, output_dir: str = "output") -> None:
         """Save scan results to JSON file"""
+        # Create output directory if it doesn't exist
+        os.makedirs(output_dir, exist_ok=True)
+        
         if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"network_scan_{self.target}_{timestamp}.json"
         
-        with open(filename, 'w') as f:
+        # Ensure filename has .json extension
+        if not filename.endswith('.json'):
+            filename += '.json'
+        
+        # Create full path
+        filepath = os.path.join(output_dir, filename)
+        
+        with open(filepath, 'w') as f:
             json.dump(self.results, f, indent=2)
         
-        print(f"\nResults saved to: {filename}")
+        print(f"\nResults saved to: {filepath}")
+        print(f"Output directory: {os.path.abspath(output_dir)}")
 
 
 def main():
@@ -193,12 +205,14 @@ def main():
     parser.add_argument('-t', '--threads', type=int, default=100,
                        help='Number of threads (default: 100)')
     parser.add_argument('-o', '--output', help='Output file for results')
+    parser.add_argument('-d', '--output-dir', default='output',
+                       help='Output directory (default: output)')
     
     args = parser.parse_args()
     
     scanner = NetworkScanner(args.target, args.ports, args.threads)
     scanner.run_scan()
-    scanner.save_results(args.output)
+    scanner.save_results(args.output, args.output_dir)
 
 
 if __name__ == "__main__":
