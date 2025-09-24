@@ -231,8 +231,9 @@ The uninstaller will:
 
 ### Phase 2: Protocols (Week 3-4)
 - Dive into `02-protocols/` to understand how data travels
-- Practice with TCP/UDP, HTTP/HTTPS, DNS, and DHCP
+- Practice with TCP/UDP, HTTP/HTTPS, DNS, SSH, NTP, and TLS/SSL
 - Use packet capture tools to see protocols in action
+- Learn certificate management and TLS security analysis
 
 ### Phase 3: Container Networking (Week 5-6)
 - Explore `03-docker-networks/` for modern networking
