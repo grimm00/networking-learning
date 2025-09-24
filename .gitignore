@@ -64,6 +64,7 @@ captures/
 *.backup
 
 # Test outputs
+output/
 test-results/
 ping_results_*.txt
 traceroute_results_*.txt

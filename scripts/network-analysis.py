@@ -9,6 +9,7 @@ import sys
 import time
 import json
 import statistics
+import os
 from datetime import datetime
 from typing import List, Dict, Any
 import argparse
@@ -166,16 +167,27 @@ class NetworkAnalyzer:
         else:
             print(f"   Failed: {result['error']}")
 
-    def save_results(self, filename: str = None):
-        """Save results to JSON file"""
+    def save_results(self, filename: str = None, output_dir: str = "output"):
+        """Save results to JSON file in output directory"""
+        # Create output directory if it doesn't exist
+        os.makedirs(output_dir, exist_ok=True)
+        
         if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"network_analysis_{self.target}_{timestamp}.json"
         
-        with open(filename, 'w') as f:
+        # Ensure filename has .json extension
+        if not filename.endswith('.json'):
+            filename += '.json'
+        
+        # Create full path in output directory
+        filepath = os.path.join(output_dir, filename)
+        
+        with open(filepath, 'w') as f:
             json.dump(self.results, f, indent=2)
         
-        print(f"\nResults saved to: {filename}")
+        print(f"\nResults saved to: {filepath}")
+        print(f"Output directory: {os.path.abspath(output_dir)}")
 
     def generate_summary(self):
         """Generate analysis summary"""
@@ -215,13 +227,14 @@ def main():
     parser = argparse.ArgumentParser(description='Network Analysis Tool')
     parser.add_argument('target', help='Target host or IP address')
     parser.add_argument('--output', '-o', help='Output file for results')
+    parser.add_argument('--output-dir', '-d', default='output', help='Output directory for results (default: output)')
     
     args = parser.parse_args()
     
     analyzer = NetworkAnalyzer(args.target)
     analyzer.run_comprehensive_test()
     analyzer.generate_summary()
-    analyzer.save_results(args.output)
+    analyzer.save_results(args.output, args.output_dir)
 
 
 if __name__ == "__main__":

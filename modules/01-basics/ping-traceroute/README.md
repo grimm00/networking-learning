@@ -132,3 +132,20 @@ Run the included scripts for automated testing:
 ./traceroute-test.sh    # Multiple destination tracing
 ./network-analysis.py   # Python-based analysis
 ```
+
+### Network Analysis Tool
+
+The `network-analysis.py` script provides comprehensive network testing:
+
+```bash
+# Basic analysis
+python3 network-analysis.py 8.8.8.8
+
+# Custom output file
+python3 network-analysis.py 8.8.8.8 --output my_analysis.json
+
+# Custom output directory
+python3 network-analysis.py 8.8.8.8 --output-dir /path/to/results
+```
+
+**Output**: Results are saved to the `output/` directory by default to keep the project directory clean. JSON files include detailed ping and traceroute results with timestamps.
