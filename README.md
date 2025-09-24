@@ -2,6 +2,27 @@
 
 A comprehensive hands-on project for learning computer networking concepts through practical exercises and simulations.
 
+## Architecture Overview
+
+This project uses a **modular architecture** with clear separation between:
+
+- **Core Networking Environment**: Basic networking tools and practice containers (managed by main `docker-compose.yml`)
+- **Specialized Modules**: Advanced services like DNS servers, HTTP servers, etc. (managed by individual module `docker-compose.yml` files)
+
+### Core vs. Module Services
+
+**Core Environment** (`./bin/container-practice.sh start`):
+- `net-practice`: Main learning container with all networking tools
+- `client`: Testing client container
+- `router`: Network routing simulation
+- `firewall-test`: Firewall testing container
+- `database`: PostgreSQL for multi-tier testing
+
+**Module Services** (started separately):
+- **DNS Server**: `cd modules/05-dns-server && docker-compose up -d`
+- **HTTP Servers**: `cd modules/06-http-servers && docker-compose up -d`
+- **Advanced Topics**: `cd modules/07-advanced && docker-compose up -d`
+
 ## Project Structure
 
 ```

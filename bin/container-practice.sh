@@ -46,9 +46,9 @@ check_docker() {
 
 # Function to start the networking environment
 start_environment() {
-    print_header "Starting Networking Practice Environment"
+    print_header "Starting Core Networking Practice Environment"
     
-    # Start all containers
+    # Start core networking containers only
     docker-compose up -d
     
     # Wait for containers to be ready

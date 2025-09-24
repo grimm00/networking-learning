@@ -1,18 +1,4 @@
 services:
-  # Web server for HTTP/HTTPS testing
-  web-server:
-    image: nginx:alpine
-    container_name: web-server
-    ports:
-      - "8080:80"
-      - "8443:443"
-    networks:
-      - frontend
-      - backend
-    volumes:
-      - ./modules/02-protocols/http-https/html:/usr/share/nginx/html
-      - ./modules/02-protocols/http-https/nginx.conf:/etc/nginx/nginx.conf
-
   # Database server for multi-tier testing
   database:
     image: postgres:15-alpine
@@ -25,62 +11,6 @@ services:
       - backend
     ports:
       - "5433:5432"
-
-  # DNS server for DNS testing
-  dns-server:
-    image: alpine:latest
-    container_name: dns-server
-    ports:
-      - "5354:53/udp"
-      - "5354:53/tcp"
-    networks:
-      - frontend
-    command: |
-      sh -c "
-        apk add --no-cache dnsmasq &&
-        cp /etc/dnsmasq.conf /etc/dnsmasq.conf.bak &&
-        cat > /etc/dnsmasq.conf << 'EOF'
-        # DNS configuration for networking practice
-        port=53
-        domain-needed
-        bogus-priv
-        no-resolv
-        server=8.8.8.8
-        server=8.8.4.4
-        local=/local/
-        expand-hosts
-        domain=local
-        EOF
-        dnsmasq -k &
-        tail -f /dev/null
-      "
-
-  # Load balancer for advanced testing
-  load-balancer:
-    image: nginx:alpine
-    container_name: load-balancer
-    ports:
-      - "80:80"
-      - "443:443"
-    networks:
-      - frontend
-      - backend
-    volumes:
-      - ./modules/07-advanced/load-balancing/nginx.conf:/etc/nginx/nginx.conf
-    depends_on:
-      - web-server
-
-  # Network monitoring container
-  monitoring:
-    image: prom/prometheus:latest
-    container_name: monitoring
-    ports:
-      - "9090:9090"
-    networks:
-      - frontend
-      - backend
-    volumes:
-      - ./modules/07-advanced/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
 
   # Client container for testing
   client:
@@ -138,16 +68,6 @@ services:
         tail -f /dev/null
       "
 
-  # Target server for testing
-  target-server:
-    image: nginx:alpine
-    container_name: target-server
-    networks:
-      - backend
-    ports:
-      - "8081:80"
-    volumes:
-      - ./modules/02-protocols/http-https/html:/usr/share/nginx/html
 
   # Firewall testing container
   firewall-test:
