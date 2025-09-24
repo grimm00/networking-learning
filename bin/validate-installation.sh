@@ -100,7 +100,7 @@ validate_individual_script() {
     fi
     
     # Check for hardcoded old paths
-    local old_paths=("01-basics" "02-protocols" "03-docker-networks" "04-network-analysis" "05-dns-server" "06-http-servers" "06-security" "07-advanced")
+    local old_paths=("01-basics" "02-protocols" "03-docker-networks" "04-network-analysis" "05-dns-server" "06-http-servers" "07-advanced" "08-security")
     
     for old_path in "${old_paths[@]}"; do
         # Check for standalone old paths (not part of modules/ path)
@@ -137,7 +137,7 @@ validate_project_structure() {
     validate_directory_exists "admin" "Admin directory"
     
     # Module directories
-    local modules=("01-basics" "02-protocols" "03-docker-networks" "04-network-analysis" "05-dns-server" "06-http-servers" "06-security" "07-advanced")
+    local modules=("01-basics" "02-protocols" "03-docker-networks" "04-network-analysis" "05-dns-server" "06-http-servers" "07-advanced" "08-security")
     
     for module in "${modules[@]}"; do
         validate_directory_exists "modules/$module" "Module: $module"
@@ -280,7 +280,7 @@ validate_module_consistency() {
     print_header "Validating Module Consistency"
     
     # Check that each module has expected structure
-    local modules=("01-basics" "02-protocols" "03-docker-networks" "04-network-analysis" "05-dns-server" "06-http-servers" "06-security" "07-advanced")
+    local modules=("01-basics" "02-protocols" "03-docker-networks" "04-network-analysis" "05-dns-server" "06-http-servers" "07-advanced" "08-security")
     
     for module in "${modules[@]}"; do
         local module_path="modules/$module"

@@ -22,6 +22,7 @@ This project uses a **modular architecture** with clear separation between:
 - **DNS Server**: `cd modules/05-dns-server && docker-compose up -d`
 - **HTTP Servers**: `cd modules/06-http-servers && docker-compose up -d`
 - **Advanced Topics**: `cd modules/07-advanced && docker-compose up -d`
+- **Security Topics**: `cd modules/08-security && docker-compose up -d`
 
 ## Project Structure
 
@@ -94,14 +95,14 @@ networking/
 │   │   ├── DOCKER_EXPLAINED.md        # Docker setup explanation
 │   │   ├── README.md                  # HTTP server documentation
 │   │   └── quick-reference.md         # Quick reference guide
-│   ├── 06-security/                   # Network security
+│   ├── 07-advanced/                   # Advanced networking topics
+│   │   ├── routing/                   # Static and dynamic routing
+│   │   ├── load-balancing/            # Load balancing techniques
+│   │   └── monitoring/                # Network monitoring tools
+│   ├── 08-security/                   # Network security
 │   │   ├── firewalls/                 # Firewall configuration
 │   │   ├── vpn/                      # Virtual Private Networks
 │   │   └── ssl-tls/                  # Encryption protocols
-│   └── 07-advanced/                   # Advanced networking topics
-│       ├── routing/                   # Static and dynamic routing
-│       ├── load-balancing/            # Load balancing techniques
-│       └── monitoring/                # Network monitoring tools
 ├── tools/                            # Additional utility tools
 │   ├── network-scanner.py            # Network discovery tool
 │   ├── bandwidth-test.py             # Bandwidth testing
