@@ -298,6 +298,28 @@ run_tshark_analysis() {
     echo "  /scripts/tshark-lab.sh"
 }
 
+# Function to run DHCP analysis tools
+run_dhcp_analysis() {
+    local container=${1:-net-practice}
+    local interface=${2:-"any"}
+    local count=${3:-50}
+    
+    print_header "Running DHCP Analysis on interface $interface"
+    
+    echo "🔍 DHCP Analyzer (Python):"
+    docker exec $container python3 /scripts/dhcp-analyzer.py -i "$interface" -c "$count"
+    
+    echo ""
+    echo "🛠️ DHCP Lab (Interactive):"
+    echo "To run the interactive DHCP lab, enter the container and run:"
+    echo "  /scripts/dhcp-lab.sh"
+    
+    echo ""
+    echo "🔧 DHCP Troubleshooting:"
+    echo "To run DHCP troubleshooting, enter the container and run:"
+    echo "  /scripts/dhcp-troubleshoot.sh"
+}
+
 # Function to list all available scripts
 list_scripts() {
     local container=${1:-net-practice}
@@ -331,11 +353,12 @@ show_menu() {
     echo "9. Run NTP Analysis"
     echo "10. Run Nmap Analysis"
     echo "11. Run Tshark Analysis"
-    echo "12. List All Scripts"
-    echo "13. Show Available Scenarios"
-    echo "14. Exit"
+    echo "12. Run DHCP Analysis"
+    echo "13. List All Scripts"
+    echo "14. Show Available Scenarios"
+    echo "15. Exit"
     echo ""
-    read -p "Choose an option (1-14): " choice
+    read -p "Choose an option (1-15): " choice
     
     case $choice in
         1)
@@ -406,17 +429,25 @@ show_menu() {
             run_tshark_analysis ${container:-net-practice} ${interface:-any} ${count:-50}
             ;;
         12)
-            list_scripts net-practice
+            echo "Available containers:"
+            echo "  - net-practice (main practice container)"
+            read -p "Enter container name (default: net-practice): " container
+            read -p "Enter interface (default: any): " interface
+            read -p "Enter packet count (default: 50): " count
+            run_dhcp_analysis ${container:-net-practice} ${interface:-any} ${count:-50}
             ;;
         13)
-            show_scenarios
+            list_scripts net-practice
             ;;
         14)
+            show_scenarios
+            ;;
+        15)
             print_success "Goodbye!"
             exit 0
             ;;
         *)
-            print_error "Invalid option. Please choose 1-14."
+            print_error "Invalid option. Please choose 1-15."
             ;;
     esac
 }
@@ -468,6 +499,11 @@ if [ $# -gt 0 ]; then
             read -p "Enter packet count (default: 50): " count
             run_tshark_analysis net-practice ${interface:-any} ${count:-50}
             ;;
+        dhcp)
+            read -p "Enter interface (default: any): " interface
+            read -p "Enter packet count (default: 50): " count
+            run_dhcp_analysis net-practice ${interface:-any} ${count:-50}
+            ;;
         scenarios)
             show_scenarios
             ;;
@@ -475,7 +511,7 @@ if [ $# -gt 0 ]; then
             list_scripts net-practice
             ;;
         *)
-            echo "Usage: $0 {start|stop|enter|exercises|info|run|dns|ssh|ntp|nmap|scenarios|list-scripts}"
+            echo "Usage: $0 {start|stop|enter|exercises|info|run|dns|ssh|ntp|nmap|tshark|dhcp|scenarios|list-scripts}"
             echo "  start         - Start the networking environment"
             echo "  stop          - Stop the networking environment"
             echo "  enter         - Enter practice container"
@@ -486,6 +522,8 @@ if [ $# -gt 0 ]; then
             echo "  ssh           - Run SSH analysis"
             echo "  ntp           - Run NTP analysis"
             echo "  nmap          - Run Nmap analysis"
+            echo "  tshark        - Run Tshark analysis"
+            echo "  dhcp          - Run DHCP analysis"
             echo "  scenarios     - Show available scenarios"
             echo "  list-scripts  - List all available scripts"
             exit 1
