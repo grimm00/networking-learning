@@ -114,12 +114,18 @@ alwaysApply: true
 - Easy maintenance and updates
 - Consistent tool availability
 - Prevents duplication and version conflicts
+- Container mounts `/scripts` directory, not individual modules
+- Modules are for documentation and local access only
 
 **Implementation**:
-- All Python and shell scripts in `scripts/`
-- Symbolic links: `modules/*/tool.py -> ../../../scripts/tool.py`
-- Validation script checks link integrity
-- Consistent naming and structure
+- **Actual files**: All Python and shell scripts in `scripts/` directory
+- **Symbolic links**: `modules/*/tool.py -> ../../../scripts/tool.py`
+- **Container usage**: Scripts run from `/scripts/` (mounted directory)
+- **Local usage**: Access via symbolic links in modules
+- **Validation**: Script checks link integrity and proper organization
+- **Structure**: Consistent naming and organization across all modules
+
+**Critical**: Never put actual executable files in modules - only symbolic links!
 
 ### 8. Module Independence
 **Rule**: Each learning module must be self-contained and independently functional.
