@@ -17,6 +17,20 @@ NC='\033[0m' # No Color
 BACKUP_DIR="/tmp/interface-backup-$(date +%Y%m%d-%H%M%S)"
 LOG_FILE="/tmp/interface-config-lab.log"
 
+# Environment detection
+IS_CONTAINER=false
+IS_INTERACTIVE=false
+
+# Detect if running in container
+if [ -f /.dockerenv ] || [ -n "${DOCKER_CONTAINER:-}" ] || grep -q docker /proc/1/cgroup 2>/dev/null; then
+    IS_CONTAINER=true
+fi
+
+# Detect if running interactively
+if [ -t 0 ] && [ -t 1 ]; then
+    IS_INTERACTIVE=true
+fi
+
 # Logging function
 log() {
     echo -e "${BLUE}[$(date '+%H:%M:%S')]${NC} $1" | tee -a "$LOG_FILE"
@@ -51,6 +65,49 @@ print_section() {
     echo -e "\n${YELLOW}=== $1 ===${NC}"
 }
 
+# Handle non-interactive mode
+handle_non_interactive() {
+    log "Running in non-interactive mode"
+    
+    if [ "$IS_CONTAINER" = true ]; then
+        log "Container environment detected - using educational mode"
+        echo -e "\n${YELLOW}📚 CONTAINER EDUCATIONAL MODE${NC}"
+        echo "This lab is designed for real network interface configuration."
+        echo "In a container environment, most interfaces are virtual and not configurable."
+        echo ""
+        echo "Available educational activities:"
+        echo "1. Show current interface status"
+        echo "2. Demonstrate interface commands (read-only)"
+        echo "3. Show interface statistics"
+        echo "4. Display routing information"
+        echo ""
+        
+        # Show current configuration
+        local interfaces
+        interfaces=$(get_interfaces)
+        if [ -n "$interfaces" ]; then
+            local interface=$(echo "$interfaces" | head -1)
+            log "Using interface: $interface"
+            show_current_config "$interface"
+        else
+            log_warning "No suitable interfaces found for demonstration"
+        fi
+        
+        echo ""
+        echo "💡 For hands-on interface configuration practice:"
+        echo "   - Use a virtual machine with real network interfaces"
+        echo "   - Use the interface analyzer: python3 /scripts/interface-analyzer.py"
+        echo "   - Use the troubleshoot script: /scripts/interface-troubleshoot.sh"
+        
+    else
+        log "Non-interactive mode on host system"
+        echo "This script requires interactive input. Please run with:"
+        echo "  $0"
+    fi
+    
+    return 0
+}
+
 # Check if running as root
 check_root() {
     if [ "$EUID" -ne 0 ]; then
@@ -67,9 +124,20 @@ command_exists() {
 # Get interface list
 get_interfaces() {
     if command_exists ip; then
-        ip link show | grep -E '^[0-9]+:' | cut -d: -f2 | sed 's/^ *//' | grep -v '^lo$'
+        # Get all interfaces and filter out problematic ones
+        local all_interfaces
+        all_interfaces=$(ip link show | grep -E '^[0-9]+:' | cut -d: -f2 | sed 's/^ *//')
+        
+        # Filter out loopback and Docker internal interfaces
+        echo "$all_interfaces" | grep -v -E '^(lo|tunl0@|gre0@|gretap0@|erspan0@|ip_vti0@|ip6_vti0@|sit0@|ip6tnl0@|ip6gre0@|eth[0-9]+@)' | head -1
+        
+        # If no suitable interfaces found, use lo for educational purposes
+        if [ -z "$(echo "$all_interfaces" | grep -v -E '^(lo|tunl0@|gre0@|gretap0@|erspan0@|ip_vti0@|ip6_vti0@|sit0@|ip6tnl0@|ip6gre0@|eth[0-9]+@)' | head -1)" ]; then
+            echo "lo"
+        fi
     elif command_exists ifconfig; then
-        ifconfig -a | grep -E '^[a-zA-Z0-9]+:' | cut -d: -f1 | grep -v '^lo$'
+        ifconfig -a | grep -E '^[a-zA-Z0-9]+:' | cut -d: -f1 | \
+        grep -v -E '^(lo|tunl0|gre0|gretap0|erspan0|ip_vti0|ip6_vti0|sit0|ip6tnl0|ip6gre0)' | head -1
     else
         log_error "Neither 'ip' nor 'ifconfig' command found"
         return 1
@@ -471,10 +539,22 @@ main() {
     # Create backup
     backup_config
     
+    # Check if running non-interactively
+    if [ "$IS_INTERACTIVE" = false ]; then
+        handle_non_interactive
+        return 0
+    fi
+    
     # Main loop
     while true; do
         show_menu
-        read -p "Select an option (1-9): " choice
+        read -t 30 -p "Select an option (1-9): " choice
+        
+        # Handle timeout or empty input
+        if [ $? -ne 0 ] || [ -z "$choice" ]; then
+            log_warning "No input received or timeout. Exiting..."
+            break
+        fi
         
         case $choice in
             1)
