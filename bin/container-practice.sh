@@ -320,6 +320,28 @@ run_dhcp_analysis() {
     echo "  /scripts/dhcp-troubleshoot.sh"
 }
 
+# Function to run Wireshark analysis tools
+run_wireshark_analysis() {
+    local container=${1:-net-practice}
+    local interface=${2:-"any"}
+    local count=${3:-100}
+    
+    print_header "Running Wireshark Analysis on interface $interface"
+    
+    echo "🔍 Wireshark Analyzer (Python):"
+    docker exec $container python3 /scripts/wireshark-analyzer.py -i "$interface" -c "$count"
+    
+    echo ""
+    echo "🛠️ Wireshark Lab (Interactive):"
+    echo "To run the interactive Wireshark lab, enter the container and run:"
+    echo "  /scripts/wireshark-lab.sh"
+    
+    echo ""
+    echo "🔧 Wireshark Troubleshooting:"
+    echo "To run Wireshark troubleshooting, enter the container and run:"
+    echo "  /scripts/wireshark-troubleshoot.sh"
+}
+
 # Function to list all available scripts
 list_scripts() {
     local container=${1:-net-practice}
@@ -354,11 +376,12 @@ show_menu() {
     echo "10. Run Nmap Analysis"
     echo "11. Run Tshark Analysis"
     echo "12. Run DHCP Analysis"
-    echo "13. List All Scripts"
-    echo "14. Show Available Scenarios"
-    echo "15. Exit"
+    echo "13. Run Wireshark Analysis"
+    echo "14. List All Scripts"
+    echo "15. Show Available Scenarios"
+    echo "16. Exit"
     echo ""
-    read -p "Choose an option (1-15): " choice
+    read -p "Choose an option (1-16): " choice
     
     case $choice in
         1)
@@ -437,17 +460,25 @@ show_menu() {
             run_dhcp_analysis ${container:-net-practice} ${interface:-any} ${count:-50}
             ;;
         13)
-            list_scripts net-practice
+            echo "Available containers:"
+            echo "  - net-practice (main practice container)"
+            read -p "Enter container name (default: net-practice): " container
+            read -p "Enter interface (default: any): " interface
+            read -p "Enter packet count (default: 100): " count
+            run_wireshark_analysis ${container:-net-practice} ${interface:-any} ${count:-100}
             ;;
         14)
-            show_scenarios
+            list_scripts net-practice
             ;;
         15)
+            show_scenarios
+            ;;
+        16)
             print_success "Goodbye!"
             exit 0
             ;;
         *)
-            print_error "Invalid option. Please choose 1-15."
+            print_error "Invalid option. Please choose 1-16."
             ;;
     esac
 }
@@ -504,6 +535,11 @@ if [ $# -gt 0 ]; then
             read -p "Enter packet count (default: 50): " count
             run_dhcp_analysis net-practice ${interface:-any} ${count:-50}
             ;;
+        wireshark)
+            read -p "Enter interface (default: any): " interface
+            read -p "Enter packet count (default: 100): " count
+            run_wireshark_analysis net-practice ${interface:-any} ${count:-100}
+            ;;
         scenarios)
             show_scenarios
             ;;
@@ -511,7 +547,7 @@ if [ $# -gt 0 ]; then
             list_scripts net-practice
             ;;
         *)
-            echo "Usage: $0 {start|stop|enter|exercises|info|run|dns|ssh|ntp|nmap|tshark|dhcp|scenarios|list-scripts}"
+            echo "Usage: $0 {start|stop|enter|exercises|info|run|dns|ssh|ntp|nmap|tshark|dhcp|wireshark|scenarios|list-scripts}"
             echo "  start         - Start the networking environment"
             echo "  stop          - Stop the networking environment"
             echo "  enter         - Enter practice container"
@@ -524,6 +560,7 @@ if [ $# -gt 0 ]; then
             echo "  nmap          - Run Nmap analysis"
             echo "  tshark        - Run Tshark analysis"
             echo "  dhcp          - Run DHCP analysis"
+            echo "  wireshark     - Run Wireshark analysis"
             echo "  scenarios     - Show available scenarios"
             echo "  list-scripts  - List all available scripts"
             exit 1
