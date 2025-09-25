@@ -89,10 +89,34 @@ DHCP is a client-server protocol that automatically provides:
 
 The DHCP process follows the **DORA** sequence:
 
-### 1. Discover (DHCPDISCOVER)
+### Timing Diagram
+```
+Client                    Server
+  |                         |
+  |-- DHCPDISCOVER -------->|  (Broadcast)
+  |   (0.0.0.0:68 → 255.255.255.255:67)
+  |                         |
+  |<-- DHCPOFFER -----------|  (Unicast/Broadcast)
+  |   (Server:67 → Client:68)
+  |                         |
+  |-- DHCPREQUEST -------->|  (Broadcast)
+  |   (0.0.0.0:68 → 255.255.255.255:67)
+  |                         |
+  |<-- DHCPACK ------------|  (Unicast)
+  |   (Server:67 → Client:68)
+  |                         |
+```
+
+### Detailed Process Flow
+
+#### 1. Discover (DHCPDISCOVER)
 ```
 Client → Broadcast: "I need an IP address"
 ```
+
+**Timing**: Immediate (client startup)
+**Retry**: 4 attempts with exponential backoff (1s, 2s, 4s, 8s)
+**Timeout**: 60 seconds total
 
 **Packet Details:**
 - Source IP: 0.0.0.0
@@ -100,11 +124,22 @@ Client → Broadcast: "I need an IP address"
 - Source Port: 68 (DHCP Client)
 - Destination Port: 67 (DHCP Server)
 - Message Type: DHCPDISCOVER
+- Client MAC: Hardware address
+- Transaction ID: Random 32-bit number
 
-### 2. Offer (DHCPOFFER)
+**What happens if no response:**
+- Client retries with exponential backoff
+- After 4 attempts, client may use APIPA (169.254.x.x)
+- Client continues to retry in background
+
+#### 2. Offer (DHCPOFFER)
 ```
 Server → Client: "Here's an available IP address"
 ```
+
+**Timing**: Within 1 second of DISCOVER
+**Multiple servers**: Client may receive multiple offers
+**Selection**: Client typically chooses first offer received
 
 **Packet Details:**
 - Source IP: Server IP
@@ -112,11 +147,19 @@ Server → Client: "Here's an available IP address"
 - Source Port: 67 (DHCP Server)
 - Destination Port: 68 (DHCP Client)
 - Message Type: DHCPOFFER
+- Your IP: Offered IP address
+- Server ID: Server's IP address
+- Lease Time: How long IP is valid
+- Options: Subnet mask, gateway, DNS, etc.
 
-### 3. Request (DHCPREQUEST)
+#### 3. Request (DHCPREQUEST)
 ```
 Client → Server: "I accept this IP address"
 ```
+
+**Timing**: Within 1 second of receiving OFFER
+**Broadcast**: Informs all servers of choice
+**Server selection**: Includes chosen server's ID
 
 **Packet Details:**
 - Source IP: 0.0.0.0
@@ -124,11 +167,18 @@ Client → Server: "I accept this IP address"
 - Source Port: 68
 - Destination Port: 67
 - Message Type: DHCPREQUEST
+- Requested IP: Chosen IP address
+- Server ID: Chosen server's IP
+- Client MAC: Hardware address
 
-### 4. Acknowledge (DHCPACK)
+#### 4. Acknowledge (DHCPACK)
 ```
 Server → Client: "IP address confirmed, here's your configuration"
 ```
+
+**Timing**: Within 1 second of REQUEST
+**Final step**: Client can now use the IP address
+**Configuration**: All network parameters provided
 
 **Packet Details:**
 - Source IP: Server IP
@@ -136,30 +186,222 @@ Server → Client: "IP address confirmed, here's your configuration"
 - Source Port: 67
 - Destination Port: 68
 - Message Type: DHCPACK
+- Your IP: Confirmed IP address
+- Lease Time: Confirmed lease duration
+- Options: Complete network configuration
+
+### Alternative Outcomes
+
+#### DHCPNAK (Negative Acknowledgment)
+```
+Server → Client: "IP address request denied"
+```
+**Causes**: IP no longer available, client not authorized, configuration error
+**Client action**: Must restart DORA process
+
+#### DHCPDECLINE (Client Rejection)
+```
+Client → Server: "I reject this IP address"
+```
+**Causes**: IP conflict detected, client doesn't like offered IP
+**Server action**: Marks IP as unavailable, offers different IP
+
+### Lease Renewal Process
+
+#### T1 (50% of lease time)
+```
+Client → Server: "I want to renew my lease"
+```
+- **Message**: DHCPREQUEST (unicast to current server)
+- **Server response**: DHCPACK (renewal granted) or DHCPNAK (renewal denied)
+- **If no response**: Client continues using IP until T2
+
+#### T2 (87.5% of lease time)
+```
+Client → Any Server: "I need to rebind my lease"
+```
+- **Message**: DHCPREQUEST (broadcast to any server)
+- **Any server can respond**: DHCPACK or DHCPNAK
+- **If no response**: Client must release IP and restart DORA
+
+#### Lease Expiration
+```
+Client → Server: "I'm releasing my IP address"
+```
+- **Message**: DHCPRELEASE (optional, graceful release)
+- **Client action**: Must restart DORA process to get new IP
 
 ## DHCP Options
 
-DHCP options provide additional configuration parameters:
+DHCP options provide additional configuration parameters beyond basic IP assignment. They allow fine-grained control over client network behavior.
 
-### Common DHCP Options
-
-| Option | Name | Description |
-|--------|------|-------------|
-| 1 | Subnet Mask | Network mask for the assigned IP |
-| 3 | Router | Default gateway address |
-| 6 | Domain Name Server | DNS server addresses |
-| 15 | Domain Name | Domain name for the client |
-| 42 | NTP Servers | Network Time Protocol servers |
-| 51 | IP Address Lease Time | How long the IP is valid |
-| 54 | Server Identifier | DHCP server IP address |
-| 58 | Renewal Time | When to renew the lease |
-| 59 | Rebinding Time | When to rebind with any server |
-| 66 | TFTP Server Name | Boot server for PXE |
-| 67 | Bootfile Name | Boot file for PXE |
-
-### Option Format
+### Option Format and Structure
 ```
-Option Code (1 byte) + Length (1 byte) + Data (Variable)
++--------+--------+--------+--------+
+|  Code  | Length |        Data      |
+| (1 byte)|(1 byte)|    (Variable)   |
++--------+--------+--------+--------+
+```
+
+**Example**: Option 6 (DNS Servers) with two servers
+```
+Code: 06 (DNS Servers)
+Length: 08 (8 bytes)
+Data: 08 08 08 08 08 08 04 04 (8.8.8.8, 8.8.4.4)
+```
+
+### Essential DHCP Options
+
+#### Basic Network Configuration
+| Option | Name | Type | Example | Description |
+|--------|------|------|---------|-------------|
+| 1 | Subnet Mask | IP Address | 255.255.255.0 | Network mask for assigned IP |
+| 3 | Router | IP Address List | 192.168.1.1 | Default gateway addresses |
+| 6 | Domain Name Server | IP Address List | 8.8.8.8, 8.8.4.4 | DNS server addresses |
+| 15 | Domain Name | String | company.local | Domain name for client |
+| 28 | Broadcast Address | IP Address | 192.168.1.255 | Broadcast address for subnet |
+
+#### Time and Lease Management
+| Option | Name | Type | Example | Description |
+|--------|------|------|---------|-------------|
+| 51 | IP Address Lease Time | 32-bit Integer | 86400 | Lease duration in seconds |
+| 58 | Renewal Time | 32-bit Integer | 43200 | T1 time (50% of lease) |
+| 59 | Rebinding Time | 32-bit Integer | 75600 | T2 time (87.5% of lease) |
+| 42 | NTP Servers | IP Address List | time.nist.gov | Time synchronization servers |
+
+#### Server Identification
+| Option | Name | Type | Example | Description |
+|--------|------|------|---------|-------------|
+| 54 | Server Identifier | IP Address | 192.168.1.10 | DHCP server IP address |
+| 60 | Vendor Class Identifier | String | MSFT 5.0 | Client vendor information |
+| 61 | Client Identifier | Variable | MAC address | Unique client identifier |
+
+#### Boot and PXE Options
+| Option | Name | Type | Example | Description |
+|--------|------|------|---------|-------------|
+| 66 | TFTP Server Name | String | boot.company.com | Boot server hostname |
+| 67 | Bootfile Name | String | pxelinux.0 | Boot file name |
+| 150 | TFTP Server Address | IP Address List | 192.168.1.100 | Boot server IP addresses |
+
+### Advanced DHCP Options
+
+#### Network Services
+| Option | Name | Type | Example | Description |
+|--------|------|------|---------|-------------|
+| 2 | Time Offset | 32-bit Integer | -18000 | Time zone offset in seconds |
+| 4 | Time Server | IP Address List | time.company.com | Time server addresses |
+| 5 | Name Server | IP Address List | ns1.company.com | Name server addresses |
+| 7 | Log Server | IP Address List | syslog.company.com | System log servers |
+| 8 | Cookie Server | IP Address List | cookie.company.com | Cookie server addresses |
+| 9 | LPR Server | IP Address List | printer.company.com | Print server addresses |
+| 10 | Impress Server | IP Address List | impress.company.com | Impress server addresses |
+| 11 | Resource Location Server | IP Address List | rls.company.com | Resource location servers |
+
+#### Microsoft-Specific Options
+| Option | Name | Type | Example | Description |
+|--------|------|------|---------|-------------|
+| 43 | Vendor Specific Information | Variable | Various | Vendor-specific data |
+| 44 | NetBIOS Name Server | IP Address List | 192.168.1.20 | WINS server addresses |
+| 45 | NetBIOS Datagram Distribution | IP Address List | 192.168.1.20 | NetBIOS datagram server |
+| 46 | NetBIOS Node Type | 8-bit Integer | 0x8 | NetBIOS node type |
+| 47 | NetBIOS Scope | String | COMPANY | NetBIOS scope identifier |
+
+#### Security and Authentication
+| Option | Name | Type | Example | Description |
+|--------|------|------|---------|-------------|
+| 90 | Authentication | Variable | Various | DHCP authentication data |
+| 114 | DHCP Captive Portal | String | https://portal.company.com | Captive portal URL |
+| 160 | PXE Client System Architecture | 16-bit Integer | 0x0007 | PXE client architecture |
+
+### Option Usage Examples
+
+#### Basic Home Network
+```bash
+# /etc/dhcp/dhcpd.conf
+subnet 192.168.1.0 netmask 255.255.255.0 {
+    range 192.168.1.100 192.168.1.200;
+    option routers 192.168.1.1;                    # Option 3
+    option subnet-mask 255.255.255.0;              # Option 1
+    option domain-name-servers 8.8.8.8, 8.8.4.4;   # Option 6
+    option domain-name "home.local";               # Option 15
+    option broadcast-address 192.168.1.255;        # Option 28
+    default-lease-time 86400;                      # Option 51
+    max-lease-time 172800;
+}
+```
+
+#### Enterprise Network
+```bash
+# /etc/dhcp/dhcpd.conf
+subnet 192.168.10.0 netmask 255.255.255.0 {
+    range 192.168.10.100 192.168.10.200;
+    option routers 192.168.10.1;
+    option subnet-mask 255.255.255.0;
+    option domain-name-servers 192.168.10.10, 192.168.10.11;
+    option domain-name "company.local";
+    option ntp-servers time.company.com;           # Option 42
+    option time-offset -18000;                     # Option 2 (EST)
+    option netbios-name-servers 192.168.10.20;     # Option 44
+    option netbios-node-type 8;                    # Option 46
+    default-lease-time 86400;
+    max-lease-time 172800;
+}
+```
+
+#### PXE Boot Configuration
+```bash
+# /etc/dhcp/dhcpd.conf
+subnet 192.168.100.0 netmask 255.255.255.0 {
+    range 192.168.100.100 192.168.100.150;
+    option routers 192.168.100.1;
+    option subnet-mask 255.255.255.0;
+    option domain-name-servers 192.168.100.10;
+    option tftp-server-name "boot.company.com";    # Option 66
+    option bootfile-name "pxelinux.0";             # Option 67
+    option tftp-server-address 192.168.100.50;     # Option 150
+    default-lease-time 3600;
+    max-lease-time 7200;
+}
+```
+
+### Option Validation and Security
+
+#### Common Option Issues
+1. **Invalid Length**: Option length doesn't match data
+2. **Malformed Data**: Incorrect format for option type
+3. **Conflicting Values**: Multiple options with same purpose
+4. **Oversized Options**: Options exceeding maximum size
+
+#### Security Considerations
+- **Validate all options** before sending to clients
+- **Sanitize string options** to prevent injection
+- **Limit option size** to prevent buffer overflows
+- **Monitor for anomalies** in option usage
+
+### Custom Vendor Options
+
+#### Defining Vendor Options
+```bash
+# /etc/dhcp/dhcpd.conf
+option space company;
+option company.server-identifier code 1 = ip-address;
+option company.custom-string code 2 = string;
+
+class "company-devices" {
+    match if option vendor-class-identifier = "CompanyDevice";
+    option company.server-identifier 192.168.1.100;
+    option company.custom-string "CustomValue";
+}
+```
+
+#### Vendor Class Matching
+```bash
+# Match specific device types
+class "cisco-phones" {
+    match if option vendor-class-identifier = "Cisco Systems, Inc.";
+    option tftp-server-name "tftp.company.com";
+    option bootfile-name "phone.cfg";
+}
 ```
 
 ## DHCP Server Types
@@ -184,28 +426,170 @@ Option Code (1 byte) + Length (1 byte) + Data (Variable)
 
 ## DHCP Lease Management
 
-### Lease States
+### Lease States and Lifecycle
 
-1. **Allocated**: IP assigned to client
-2. **Available**: IP available for assignment
-3. **Expired**: Lease time exceeded
-4. **Reserved**: IP reserved for specific client
+#### Visual Lease Timeline
+```
+Lease Start    T1 (50%)    T2 (87.5%)    Lease End
+     |            |            |            |
+     |<---------->|<---------->|<---------->|
+     |            |            |            |
+  Allocated    Renewal     Rebind      Expired
+     |            |            |            |
+     |            |            |            |
+   Active      Renewal     Rebind      Must
+  (Normal)    Attempted   Attempted   Restart
+```
 
-### Lease Renewal Process
+#### Lease States
+1. **Allocated**: IP assigned to client and actively used
+2. **Available**: IP available for assignment to new clients
+3. **Expired**: Lease time exceeded, IP reclaimed
+4. **Reserved**: IP reserved for specific client (static assignment)
+5. **Abandoned**: IP marked as unusable due to conflicts
+6. **Free**: IP returned to pool after release
 
-1. **T1 (50% of lease time)**: Client attempts renewal with current server
-2. **T2 (87.5% of lease time)**: Client attempts renewal with any server
-3. **Expiration**: Client must release IP and restart DORA
+### Detailed Lease Renewal Process
 
-### Lease Database
+#### T1 (50% of lease time) - Renewal Attempt
+```
+Timeline: 50% of lease duration
+Example: 24-hour lease → T1 at 12 hours
 
-DHCP servers maintain lease databases containing:
-- **IP Address**: Assigned IP
-- **MAC Address**: Client hardware address
-- **Lease Start**: When lease was granted
-- **Lease End**: When lease expires
-- **Client Hostname**: Optional client identifier
-- **Binding State**: Current lease status
+Process:
+1. Client sends DHCPREQUEST (unicast to current server)
+2. Server responds with DHCPACK (renewal granted)
+3. If successful: Lease extended, continue using IP
+4. If failed: Continue using IP until T2
+```
+
+#### T2 (87.5% of lease time) - Rebind Attempt
+```
+Timeline: 87.5% of lease duration
+Example: 24-hour lease → T2 at 21 hours
+
+Process:
+1. Client sends DHCPREQUEST (broadcast to any server)
+2. Any server can respond with DHCPACK or DHCPNAK
+3. If successful: Lease extended, continue using IP
+4. If failed: Continue using IP until expiration
+```
+
+#### Lease Expiration (100% of lease time)
+```
+Timeline: 100% of lease duration
+Example: 24-hour lease → Expiration at 24 hours
+
+Process:
+1. Client must stop using IP address
+2. Client sends DHCPRELEASE (optional, graceful)
+3. Client must restart DORA process
+4. Server reclaims IP for reassignment
+```
+
+### Lease Database Structure
+
+#### Database Fields
+```bash
+# Example lease entry
+lease 192.168.1.100 {
+    starts 3 2024/09/25 10:30:45;    # Lease start time
+    ends 4 2024/09/26 10:30:45;      # Lease end time
+    tstp 4 2024/09/26 10:30:45;      # T2 time
+    tsfp 4 2024/09/26 10:30:45;      # T1 time
+    cltt 3 2024/09/25 10:30:45;      # Client last transaction time
+    binding state active;             # Current state
+    next binding state free;          # Next state
+    rewind binding state free;        # State on rewind
+    hardware ethernet 00:11:22:33:44:55;  # Client MAC
+    client-hostname "laptop-01";      # Client hostname
+    option dhcp-client-identifier 01:00:11:22:33:44:55;  # Client ID
+}
+```
+
+#### Database Maintenance
+```bash
+# Check database integrity
+sudo dhcpd -t -cf /etc/dhcp/dhcpd.conf
+
+# Backup lease database
+sudo cp /var/lib/dhcp/dhcpd.leases /backup/dhcpd.leases.$(date +%Y%m%d)
+
+# Recover from corruption
+sudo dhcpd -t -cf /etc/dhcp/dhcpd.conf
+sudo systemctl restart isc-dhcp-server
+```
+
+### Lease Configuration Examples
+
+#### Short Lease Times (High Mobility)
+```bash
+# Mobile devices, guest networks
+subnet 192.168.100.0 netmask 255.255.255.0 {
+    range 192.168.100.100 192.168.100.200;
+    default-lease-time 3600;          # 1 hour
+    max-lease-time 7200;              # 2 hours
+    min-lease-time 1800;              # 30 minutes
+}
+```
+
+#### Long Lease Times (Stable Networks)
+```bash
+# Corporate desktops, servers
+subnet 192.168.10.0 netmask 255.255.255.0 {
+    range 192.168.10.100 192.168.10.200;
+    default-lease-time 86400;         # 24 hours
+    max-lease-time 604800;            # 7 days
+    min-lease-time 3600;              # 1 hour
+}
+```
+
+#### Mixed Lease Times (Device Classification)
+```bash
+# Different lease times per device type
+class "mobile-devices" {
+    match if substring(option vendor-class-identifier, 0, 4) = "MSFT";
+    default-lease-time 3600;
+    max-lease-time 7200;
+}
+
+class "servers" {
+    match if substring(option host-name, 0, 3) = "srv";
+    default-lease-time 604800;
+    max-lease-time 2592000;
+}
+```
+
+### Lease Monitoring and Statistics
+
+#### Real-time Monitoring
+```bash
+# Monitor active leases
+sudo dhcp-lease-list
+
+# Check lease utilization
+dhcp-lease-list | wc -l
+
+# Monitor specific client
+dhcp-lease-list | grep "00:11:22:33:44:55"
+```
+
+#### Lease Statistics
+```bash
+# Server statistics
+sudo journalctl -u isc-dhcp-server | grep -E "(DHCPDISCOVER|DHCPREQUEST|DHCPACK|DHCPNAK)"
+
+# Lease database analysis
+grep "binding state active" /var/lib/dhcp/dhcpd.leases | wc -l
+grep "binding state free" /var/lib/dhcp/dhcpd.leases | wc -l
+```
+
+#### Performance Metrics
+- **Lease Utilization**: Percentage of IP pool in use
+- **Renewal Success Rate**: Percentage of successful renewals
+- **Average Lease Duration**: How long clients keep IPs
+- **Conflict Rate**: Frequency of IP conflicts
+- **Response Time**: Time to assign new leases
 
 ## DHCPv6 (IPv6 Dynamic Host Configuration Protocol)
 
