@@ -1,0 +1,132 @@
+#!/bin/bash
+# netstat-ss-lab.sh
+# Comprehensive Network Analysis Lab Exercises
+
+echo "Starting Network Analysis Lab Exercises..."
+
+# --- Exercise 1: Basic netstat Usage ---
+echo -e "\n--- Exercise 1: Basic netstat Usage ---"
+echo "Goal: Learn basic netstat commands and understand output format."
+echo "Steps:"
+echo "1. Run 'netstat -tuna' to see all TCP and UDP connections"
+echo "2. Run 'netstat -tuln' to see only listening sockets"
+echo "3. Run 'netstat -tunap' to see connections with process information"
+echo "4. Compare the output and understand the differences"
+echo "Expected Output: Different levels of detail in connection information."
+read -p "Press Enter to continue to Exercise 2..."
+
+# --- Exercise 2: Basic ss Usage ---
+echo -e "\n--- Exercise 2: Basic ss Usage ---"
+echo "Goal: Learn basic ss commands and compare with netstat."
+echo "Steps:"
+echo "1. Run 'ss -tuna' to see all TCP and UDP connections"
+echo "2. Run 'ss -tuln' to see only listening sockets"
+echo "3. Run 'ss -tunap' to see connections with process information"
+echo "4. Compare ss output with netstat output from Exercise 1"
+echo "Expected Output: ss provides similar information but with different formatting."
+read -p "Press Enter to continue to Exercise 3..."
+
+# --- Exercise 3: Connection State Analysis ---
+echo -e "\n--- Exercise 3: Connection State Analysis ---"
+echo "Goal: Understand different TCP connection states."
+echo "Steps:"
+echo "1. Start a web server: python3 -m http.server 8000"
+echo "2. Use 'ss -tuna' to see the LISTEN state"
+echo "3. Connect to the server: curl localhost:8000"
+echo "4. Use 'ss -tuna' to see ESTABLISHED connections"
+echo "5. Close the connection and observe state changes"
+echo "Expected Output: Different connection states (LISTEN, ESTABLISHED, TIME-WAIT)."
+read -p "Press Enter to continue to Exercise 4..."
+
+# --- Exercise 4: Port Analysis ---
+echo -e "\n--- Exercise 4: Port Analysis ---"
+echo "Goal: Analyze port usage and identify services."
+echo "Steps:"
+echo "1. Start multiple services (SSH, HTTP, DNS if available)"
+echo "2. Use 'ss -tuln' to identify listening ports"
+echo "3. Use 'ss -tunap' to see which processes are using ports"
+echo "4. Create a mapping of ports to services"
+echo "5. Use 'ss -tuna | grep :80' to filter specific ports"
+echo "Expected Output: Clear understanding of port-to-service mapping."
+read -p "Press Enter to continue to Exercise 5..."
+
+# --- Exercise 5: Advanced ss Filtering ---
+echo -e "\n--- Exercise 5: Advanced ss Filtering ---"
+echo "Goal: Master advanced ss filtering capabilities."
+echo "Steps:"
+echo "1. Use 'ss -t state established' to see only established connections"
+echo "2. Use 'ss -t state listening' to see only listening sockets"
+echo "3. Use 'ss -t sport :80' to see connections from port 80"
+echo "4. Use 'ss -t dport :443' to see connections to port 443"
+echo "5. Use 'ss -t src 192.168.1.100' to filter by source address"
+echo "6. Use 'ss -t dst 8.8.8.8' to filter by destination address"
+echo "Expected Output: Precise filtering of network connections."
+read -p "Press Enter to continue to Exercise 6..."
+
+# --- Exercise 6: Network Statistics ---
+echo -e "\n--- Exercise 6: Network Statistics ---"
+echo "Goal: Understand network statistics and performance metrics."
+echo "Steps:"
+echo "1. Run 'ss -s' to see summary statistics"
+echo "2. Run 'netstat -i' to see interface statistics"
+echo "3. Run 'netstat -s' to see protocol statistics"
+echo "4. Monitor statistics over time: watch -n 1 'ss -s'"
+echo "5. Identify key metrics (connections, packets, errors)"
+echo "Expected Output: Understanding of network performance indicators."
+read -p "Press Enter to continue to Exercise 7..."
+
+# --- Exercise 7: Troubleshooting Practice ---
+echo -e "\n--- Exercise 7: Troubleshooting Practice ---"
+echo "Goal: Practice real-world troubleshooting scenarios."
+echo "Steps:"
+echo "1. Simulate a port conflict by starting two services on the same port"
+echo "2. Use 'ss -tuln | grep :8080' to check if port is in use"
+echo "3. Use 'ss -tunap | grep :8080' to find the process using the port"
+echo "4. Simulate high connection count by creating many connections"
+echo "5. Use 'ss -tuna | wc -l' to count total connections"
+echo "6. Use 'ss -tuna | awk '{print \$1}' | sort | uniq -c' to analyze states"
+echo "Expected Output: Practical troubleshooting skills."
+read -p "Press Enter to continue to Exercise 8..."
+
+# --- Exercise 8: Security Analysis ---
+echo -e "\n--- Exercise 8: Security Analysis ---"
+echo "Goal: Identify potential security issues using network analysis."
+echo "Steps:"
+echo "1. Use 'ss -tuna | grep -v 127.0.0.1' to find external connections"
+echo "2. Use 'ss -tuln | grep -v -E \":(22|80|443|53|25)\"' to find unusual ports"
+echo "3. Use 'ss -tuna | grep SYN-SENT' to find connection attempts"
+echo "4. Use 'ss -tuna | awk '{print \$4}' | cut -d: -f1 | sort | uniq -c' to analyze remote addresses"
+echo "5. Create a security report based on findings"
+echo "Expected Output: Security awareness and analysis skills."
+read -p "Press Enter to continue to Exercise 9..."
+
+# --- Exercise 9: Performance Monitoring ---
+echo -e "\n--- Exercise 9: Performance Monitoring ---"
+echo "Goal: Set up continuous network monitoring."
+echo "Steps:"
+echo "1. Create a monitoring script:"
+echo "   while true; do"
+echo "     echo \"=== \$(date) ===\""
+echo "     ss -tuna | awk '{print \$1}' | sort | uniq -c"
+echo "     sleep 5"
+echo "   done"
+echo "2. Run the script and observe connection patterns"
+echo "3. Modify the script to track specific metrics"
+echo "4. Set up alerts for unusual patterns"
+echo "Expected Output: Automated network monitoring capabilities."
+read -p "Press Enter to continue to Exercise 10..."
+
+# --- Exercise 10: Comparison and Best Practices ---
+echo -e "\n--- Exercise 10: Comparison and Best Practices ---"
+echo "Goal: Understand when to use netstat vs ss and best practices."
+echo "Steps:"
+echo "1. Compare performance: time netstat -tuna vs time ss -tuna"
+echo "2. Compare output formats and readability"
+echo "3. Test filtering capabilities of both tools"
+echo "4. Create a decision matrix for tool selection"
+echo "5. Document best practices for network analysis"
+echo "Expected Output: Clear understanding of tool selection criteria."
+read -p "Network Analysis Lab Exercises Complete. Press Enter to finish."
+
+echo "Network Analysis Lab Exercises Finished."
+echo "You've completed comprehensive training in netstat and ss usage!"
