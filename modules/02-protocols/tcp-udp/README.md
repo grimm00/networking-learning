@@ -1092,5 +1092,21 @@ tshark -i any -f "udp port 53"
 161   - SNMP
 ```
 
+## Additional Learning Resources
+
+### Video Tutorials
+- **[TCP/UDP Protocol Deep Dive](https://www.youtube.com/watch?v=4l2_BCr-bhw)** - Comprehensive video explanation of TCP and UDP protocols
+
+### Recommended Reading
+- **RFC 793**: Transmission Control Protocol specification
+- **RFC 768**: User Datagram Protocol specification
+- **RFC 1323**: TCP Extensions for High Performance
+- **RFC 2018**: TCP Selective Acknowledgment Options
+
+### Online Tools
+- **Packet Analyzer**: Wireshark for packet capture and analysis
+- **Network Simulator**: GNS3 for network topology simulation
+- **Protocol Analyzer**: tcpdump for command-line packet analysis
+
 This comprehensive TCP/UDP module provides everything you need to understand, analyze, and troubleshoot these fundamental networking protocols!
 
