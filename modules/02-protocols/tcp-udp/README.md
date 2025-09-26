@@ -1095,7 +1095,7 @@ tshark -i any -f "udp port 53"
 ## Additional Learning Resources
 
 ### Video Tutorials
-- **[TCP/UDP Protocol Deep Dive](https://www.youtube.com/watch?v=4l2_BCr-bhw)** - Comprehensive video explanation of TCP and UDP protocols
+- **[TCP: Flow Control and Window Size](https://www.youtube.com/watch?v=4l2_BCr-bhw)** by Rick Graziani - Visual explanation of TCP flow control mechanisms and sliding window protocol
 
 ### Recommended Reading
 - **RFC 793**: Transmission Control Protocol specification
