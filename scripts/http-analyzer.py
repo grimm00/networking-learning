@@ -16,9 +16,14 @@ from datetime import datetime
 
 class HTTPAnalyzer:
     def __init__(self, url, timeout=10):
-        self.url = url
+        # Auto-add protocol if missing
+        if not url.startswith(('http://', 'https://')):
+            # Try HTTPS first, fall back to HTTP if HTTPS fails
+            self.url = f"http://{url}"
+        else:
+            self.url = url
         self.timeout = timeout
-        self.parsed_url = urlparse(url)
+        self.parsed_url = urlparse(self.url)
         self.session = requests.Session()
         
     def analyze_request(self):
