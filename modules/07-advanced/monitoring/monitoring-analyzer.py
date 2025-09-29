@@ -1,0 +1,1 @@
+../../../scripts/monitoring-analyzer.py
