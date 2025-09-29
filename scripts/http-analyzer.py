@@ -15,7 +15,7 @@ from urllib.parse import urlparse
 from datetime import datetime
 
 class HTTPAnalyzer:
-    def __init__(self, url, timeout=10):
+    def __init__(self, url, timeout=10, verbose=False, minimal=False):
         # Auto-add protocol if missing
         if not url.startswith(('http://', 'https://')):
             # Try HTTPS first, fall back to HTTP if HTTPS fails
@@ -25,11 +25,14 @@ class HTTPAnalyzer:
         self.timeout = timeout
         self.parsed_url = urlparse(self.url)
         self.session = requests.Session()
+        self.verbose = verbose
+        self.minimal = minimal
         
     def analyze_request(self):
         """Perform comprehensive HTTP analysis"""
-        print(f"🔍 Analyzing HTTP/HTTPS for: {self.url}")
-        print("=" * 60)
+        if not self.minimal:
+            print(f"🔍 Analyzing HTTP/HTTPS for: {self.url}")
+            print("=" * 60)
         
         try:
             # Basic request
@@ -38,6 +41,11 @@ class HTTPAnalyzer:
             end_time = time.time()
             
             response_time = (end_time - start_time) * 1000  # Convert to milliseconds
+            
+            if self.minimal:
+                # Minimal output - just essential info
+                print(f"{response.status_code} {response.reason} | {response_time:.1f}ms | {len(response.content)} bytes | {response.headers.get('server', 'Unknown')}")
+                return response
             
             # Request information
             print(f"\n📤 REQUEST INFORMATION:")
@@ -76,17 +84,35 @@ class HTTPAnalyzer:
         """Analyze HTTP headers"""
         print(f"\n📋 HEADERS ANALYSIS:")
         
-        # Request headers
-        print(f"  Request Headers:")
-        for header, value in response.request.headers.items():
-            print(f"    {header}: {value}")
+        if self.verbose:
+            # Verbose: Show all headers with full values
+            print(f"  Request Headers:")
+            for header, value in response.request.headers.items():
+                print(f"    {header}: {value}")
+            
+            print(f"  Response Headers:")
+            for header, value in response.headers.items():
+                print(f"    {header}: {value}")
+        else:
+            # Default: Show important headers with truncated values
+            important_headers = [
+                'content-type', 'content-length', 'server', 'date', 'last-modified',
+                'etag', 'cache-control', 'expires', 'location', 'set-cookie',
+                'content-encoding', 'transfer-encoding', 'connection'
+            ]
+            
+            print(f"  Key Response Headers:")
+            for header in important_headers:
+                value = response.headers.get(header)
+                if value:
+                    # Truncate long values for readability
+                    if len(str(value)) > 60:
+                        display_value = str(value)[:57] + "..."
+                    else:
+                        display_value = value
+                    print(f"    {header}: {display_value}")
         
-        # Response headers
-        print(f"  Response Headers:")
-        for header, value in response.headers.items():
-            print(f"    {header}: {value}")
-        
-        # Security headers
+        # Security headers analysis
         security_headers = [
             'strict-transport-security',
             'content-security-policy',
@@ -100,7 +126,21 @@ class HTTPAnalyzer:
         for header in security_headers:
             value = response.headers.get(header, 'Not Set')
             status = "✅" if value != 'Not Set' else "❌"
-            print(f"    {status} {header}: {value}")
+            
+            if self.verbose and value != 'Not Set':
+                # In verbose mode, show full security header values
+                print(f"    {status} {header}: {value}")
+            else:
+                # In default mode, show summary
+                if value != 'Not Set':
+                    if header == 'content-security-policy' and len(value) > 50:
+                        print(f"    {status} {header}: {value[:47]}...")
+                    elif header == 'strict-transport-security' and len(value) > 30:
+                        print(f"    {status} {header}: {value[:27]}...")
+                    else:
+                        print(f"    {status} {header}: {value}")
+                else:
+                    print(f"    {status} {header}: Not Set")
     
     def analyze_ssl(self):
         """Analyze SSL/TLS configuration"""
@@ -178,6 +218,9 @@ class HTTPAnalyzer:
     
     def analyze_content(self, response):
         """Analyze response content"""
+        if self.minimal:
+            return  # Skip content analysis in minimal mode
+            
         print(f"\n📄 CONTENT ANALYSIS:")
         
         content_type = response.headers.get('content-type', '').lower()
@@ -203,11 +246,29 @@ class HTTPAnalyzer:
             print(f"  Scripts: {scripts}")
             print(f"  Stylesheets: {stylesheets}")
             
+            if self.verbose:
+                # In verbose mode, show more details
+                print(f"  Content Length: {len(content)} characters")
+                if '<meta' in content:
+                    meta_count = content.count('<meta')
+                    print(f"  Meta Tags: {meta_count}")
+                if '<form' in content:
+                    form_count = content.count('<form')
+                    print(f"  Forms: {form_count}")
+            
         elif 'json' in content_type:
             print(f"  Type: JSON Document")
             try:
                 data = response.json()
-                print(f"  Keys: {list(data.keys()) if isinstance(data, dict) else 'Array'}")
+                if self.verbose:
+                    print(f"  Keys: {list(data.keys()) if isinstance(data, dict) else 'Array'}")
+                    print(f"  Structure: {type(data).__name__}")
+                else:
+                    # Show just top-level keys
+                    if isinstance(data, dict):
+                        print(f"  Top-level Keys: {len(data)}")
+                    elif isinstance(data, list):
+                        print(f"  Array Length: {len(data)}")
             except:
                 print(f"  Invalid JSON")
                 
@@ -216,6 +277,8 @@ class HTTPAnalyzer:
             
         else:
             print(f"  Type: {content_type}")
+            if self.verbose:
+                print(f"  Content Length: {len(response.text)} characters")
     
     def test_methods(self):
         """Test different HTTP methods"""
@@ -285,17 +348,23 @@ def main():
     parser.add_argument("-m", "--methods", action="store_true", help="Test different HTTP methods")
     parser.add_argument("-r", "--redirects", action="store_true", help="Test redirect handling")
     parser.add_argument("-p", "--performance", type=int, default=0, help="Run performance test (number of iterations)")
-    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output (show all headers and detailed content)")
+    parser.add_argument("--minimal", action="store_true", help="Minimal output (status, time, size, server only)")
     
     args = parser.parse_args()
     
-    analyzer = HTTPAnalyzer(args.url, args.timeout)
+    # Validate arguments
+    if args.minimal and args.verbose:
+        print("❌ Error: Cannot use both --minimal and --verbose flags")
+        sys.exit(1)
+    
+    analyzer = HTTPAnalyzer(args.url, args.timeout, args.verbose, args.minimal)
     
     # Basic analysis
     response = analyzer.analyze_request()
     
-    if response:
-        # Optional tests
+    if response and not args.minimal:
+        # Optional tests (skip in minimal mode)
         if args.methods:
             analyzer.test_methods()
         
@@ -305,7 +374,8 @@ def main():
         if args.performance > 0:
             analyzer.performance_test(args.performance)
     
-    print(f"\n✅ Analysis complete for {args.url}")
+    if not args.minimal:
+        print(f"\n✅ Analysis complete for {args.url}")
 
 if __name__ == "__main__":
     main()
