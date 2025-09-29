@@ -89,7 +89,6 @@ networking/
 │   │   └── README.md                  # DNS server documentation
 │   ├── 06-http-servers/               # HTTP server management
 │   │   ├── nginx-configs/             # Nginx configuration files
-│   │   ├── apache-configs/            # Apache configuration files
 │   │   ├── html/                      # Sample web content
 │   │   ├── ssl-certs/                 # SSL certificate examples
 │   │   ├── http-lab.sh                # Interactive HTTP server lab
@@ -107,14 +106,17 @@ networking/
 │   │   └── ssl-tls/                  # Encryption protocols
 ├── tools/                            # Additional utility tools
 │   ├── network-scanner.py            # Network discovery tool
-│   ├── bandwidth-test.py             # Bandwidth testing
-│   └── port-scanner.py               # Port scanning utility
+│   ├── dns-analyzer.py               # DNS analysis tool
+│   └── dns-troubleshoot.sh           # DNS troubleshooting script
 └── admin/                            # Administrative documentation
     ├── README.md                      # Admin overview
     ├── ARCHITECTURE.md                # System architecture
     ├── DEVELOPMENT.md                 # Development guidelines
     ├── DEPLOYMENT.md                  # Deployment procedures
-    └── MAINTENANCE.md                 # Maintenance procedures
+    ├── MAINTENANCE.md                 # Maintenance procedures
+    ├── progress-tracker.md            # Project progress tracking
+    ├── project-expansion-plan.md      # Project expansion planning
+    └── chatlogs/                      # Development session logs
 ```
 
 ## 🐳 Docker Setup Explained
@@ -272,7 +274,7 @@ The uninstaller will:
 - Learn about firewalls, VPNs, and encryption
 
 ### Phase 5: Advanced Topics (Week 9-10)
-- Master `06-advanced/` concepts like routing and load balancing
+- Master `07-advanced/` concepts like routing and load balancing
 - Build monitoring solutions
 - Create complex network topologies
 
@@ -289,8 +291,8 @@ The uninstaller will:
 
 2. **Start with basics**
    ```bash
-   cd 01-basics/ping-traceroute
-   ./run-exercises.sh
+   cd modules/01-basics/ping-traceroute
+   ./ping-test.sh
    ```
 
 3. **Launch network simulation**
