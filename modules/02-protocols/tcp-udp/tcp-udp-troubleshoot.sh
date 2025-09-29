@@ -1,1 +1,1 @@
-../../scripts/tcp-udp-troubleshoot.sh
+../../../scripts/tcp-udp-troubleshoot.sh

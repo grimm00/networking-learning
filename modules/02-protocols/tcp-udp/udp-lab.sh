@@ -1,1 +1,1 @@
-../../scripts/udp-lab.sh
+../../../scripts/udp-lab.sh

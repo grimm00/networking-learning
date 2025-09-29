@@ -1,1 +1,1 @@
-../../scripts/udp-analyzer.py
+../../../scripts/udp-analyzer.py

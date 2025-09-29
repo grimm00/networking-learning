@@ -1,1 +1,1 @@
-../../scripts/tcp-lab.sh
+../../../scripts/tcp-lab.sh

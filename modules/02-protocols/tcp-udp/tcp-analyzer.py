@@ -1,1 +1,1 @@
-../../scripts/tcp-analyzer.py
+../../../scripts/tcp-analyzer.py
