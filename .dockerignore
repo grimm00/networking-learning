@@ -1,4 +1,20 @@
-# Python
+# Git and version control
+.git/
+.gitignore
+.gitattributes
+
+# Documentation and admin files
+README.md
+DOCKER_EXPLAINED.md
+docs/
+admin/
+*.md
+
+# Python virtual environment
+venv/
+env/
+ENV/
+.venv/
 __pycache__/
 *.py[cod]
 *$py.class
@@ -27,23 +43,19 @@ coverage/
 .tox/
 .nox/
 
-# Virtual environments
-venv/
-env/
-ENV/
-env.bak/
-venv.bak/
-.venv/
-
-# IDE
+# IDE and editor files
 .vscode/
 .idea/
+.cursor/
 *.swp
 *.swo
 *~
-.cursor/
+.#*
+\#*#
+.*.swp
+.*.swo
 
-# OS
+# OS files
 .DS_Store
 .DS_Store?
 ._*
@@ -51,13 +63,15 @@ venv.bak/
 .Trashes
 ehthumbs.db
 Thumbs.db
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
 
-# Logs
+# Logs and temporary files
 *.log
-logs/
 *.log.*
-
-# Temporary files
+logs/
 *.tmp
 *.temp
 temp/
@@ -118,16 +132,13 @@ custom_network_analysis_*.json
 *.lock
 *.sock
 
-# Docker
-.dockerignore
-
 # Node.js (if used)
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Database
+# Database files
 *.db
 *.sqlite
 *.sqlite3
@@ -139,15 +150,42 @@ yarn-error.log*
 *.rar
 *.7z
 
-# Editor backups
-*~
-.#*
-\#*#
-.*.swp
-.*.swo
+# Package management
+package-lock.json
+yarn.lock
+Pipfile.lock
 
-# System files
-.fuse_hidden*
-.directory
-.Trash-*
-.nfs*
+# Docker files (avoid recursive copying)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Binaries and executables
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test files
+test/
+tests/
+*_test.py
+test_*.py
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+Jenkinsfile
+
+# Local development
+.local/
+local/
+dev/
+development/
+
+# Backup files
+*.orig
+*.rej
+*.patch
